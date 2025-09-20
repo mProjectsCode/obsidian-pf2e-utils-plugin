@@ -2,6 +2,7 @@ import type { Parser } from '@lemons_dev/parsinom/lib/Parser';
 import { P_UTILS } from '@lemons_dev/parsinom/lib/ParserUtils';
 import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
 import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
+import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 
 // We want to parse natural language checks like would appear in pathfinder source material
 // This should work for both pf1e and pf2e skill checks
@@ -85,6 +86,52 @@ export enum Pf2eMiscSkills {
 }
 
 // ============================================================================
+// Skill Alternative Mappings
+// ============================================================================
+
+/**
+ * Maps skill abbreviations and alternative names to their canonical skill names
+ */
+export const PF1E_SKILL_ALTERNATIVES: Record<string, string> = {
+	// Common abbreviations
+	umd: Pf1eSkills.UseMagicDevice,
+	dd: Pf1eSkills.DisableDevice,
+	ea: Pf1eSkills.EscapeArtist,
+	ha: Pf1eSkills.HandleAnimal,
+	sm: Pf1eSkills.SenseMotive,
+	soh: Pf1eSkills.SleightOfHand,
+
+	// Knowledge skill alternatives
+	'knowledge arcana': Pf1eSkills.KnowledgeArcana,
+	'knowledge dungeoneering': Pf1eSkills.KnowledgeDungeoneering,
+	'knowledge engineering': Pf1eSkills.KnowledgeEngineering,
+	'knowledge geography': Pf1eSkills.KnowledgeGeography,
+	'knowledge history': Pf1eSkills.KnowledgeHistory,
+	'knowledge local': Pf1eSkills.KnowledgeLocal,
+	'knowledge nature': Pf1eSkills.KnowledgeNature,
+	'knowledge nobility': Pf1eSkills.KnowledgeNobility,
+	'knowledge planes': Pf1eSkills.KnowledgePlanes,
+	'knowledge religion': Pf1eSkills.KnowledgeReligion,
+};
+
+export const PF2E_SKILL_ALTERNATIVES: Record<string, string> = {
+	// Common abbreviations (PF2e has simpler skill names)
+	ath: Pf2eSkills.Athletics,
+	acr: Pf2eSkills.Acrobatics,
+	dec: Pf2eSkills.Deception,
+	dip: Pf2eSkills.Diplomacy,
+	int: Pf2eSkills.Intimidation,
+	med: Pf2eSkills.Medicine,
+	occ: Pf2eSkills.Occultism,
+	perf: Pf2eSkills.Performance,
+	rel: Pf2eSkills.Religion,
+	soc: Pf2eSkills.Society,
+	sur: Pf2eSkills.Survival,
+	thi: Pf2eSkills.Thievery,
+	per: Pf2eMiscSkills.Perception,
+};
+
+// ============================================================================
 // Parameterized Parser Factory Functions
 // ============================================================================
 
@@ -96,11 +143,17 @@ function createDcParser(): Parser<number> {
 }
 
 /**
- * Creates a skill name parser from the provided skill enums
+ * Creates a skill name parser from the provided skill enums and alternatives mapping
  */
-function createSkillNameParser(...skillEnums: Record<string, string>[]): Parser<string> {
+function createSkillNameParser(skillAlternatives: Record<string, string>, ...skillEnums: Record<string, string>[]): Parser<string> {
 	const allSkills = skillEnums.flatMap(enumObj => Object.values(enumObj));
-	return P.or(...allSkills.map(value => P.string(value.toLowerCase()).result(value)));
+	const allAlternatives = Object.keys(skillAlternatives);
+
+	// Create parsers for all skill names and alternatives
+	const skillParsers = allSkills.map(value => P.string(value.toLowerCase()).result(value));
+	const alternativeParsers = allAlternatives.map(alternative => P.string(alternative.toLowerCase()).result(skillAlternatives[alternative]));
+
+	return P.or(...skillParsers, ...alternativeParsers);
 }
 
 /**
@@ -120,10 +173,11 @@ function createSkillsListParser(skillNameParser: Parser<string>): Parser<string[
 /**
  * Creates a complete natural language check parser for both "DC X Skill" and "Skill DC X" formats
  */
-function createNaturalLanguageParser(skillsListParser: Parser<string[]>, dcParser: Parser<number>): Parser<InlineCheck> {
+function createNaturalLanguageParser(system: GameSystem, skillsListParser: Parser<string[]>, dcParser: Parser<number>): Parser<InlineCheck> {
 	// Parser for "DC X Skill" format
 	const dcFirstParser: Parser<InlineCheck> = P.sequenceMap(
 		(dc, skills) => ({
+			system: system,
 			type: skills,
 			dc: dc,
 		}),
@@ -134,6 +188,7 @@ function createNaturalLanguageParser(skillsListParser: Parser<string[]>, dcParse
 	// Parser for "Skill DC X" format
 	const skillFirstParser: Parser<InlineCheck> = P.sequenceMap(
 		(skills, dc) => ({
+			system: system,
 			type: skills,
 			dc: dc,
 		}),
@@ -162,11 +217,11 @@ function createNaturalLanguageParser(skillsListParser: Parser<string[]>, dcParse
 // DC 20 Knowledge (history), Knowledge (local), or Knowledge (planes)
 
 // PF1e Parser Implementation using factory functions
-const PF1E_SKILL_NAME_PARSER = createSkillNameParser(Pf1eSkills, Pf1eMiscSkills);
+const PF1E_SKILL_NAME_PARSER = createSkillNameParser(PF1E_SKILL_ALTERNATIVES, Pf1eSkills, Pf1eMiscSkills);
 const PF1E_SKILLS_LIST_PARSER = createSkillsListParser(PF1E_SKILL_NAME_PARSER);
 const PF1E_DC_PARSER = createDcParser();
 
-export const PF1E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(PF1E_SKILLS_LIST_PARSER, PF1E_DC_PARSER);
+export const PF1E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(GameSystem.PF1E, PF1E_SKILLS_LIST_PARSER, PF1E_DC_PARSER);
 
 /**
  * Parses a PF1e natural language skill check string into an InlineCheck object
@@ -193,11 +248,11 @@ export function parsePf1eCheck(input: string): InlineCheck | undefined {
 // DC 15 Arcana, Nature, or Religion
 
 // PF2e Parser Implementation using factory functions
-const PF2E_SKILL_NAME_PARSER = createSkillNameParser(Pf2eSkills, Pf2eMiscSkills);
+const PF2E_SKILL_NAME_PARSER = createSkillNameParser(PF2E_SKILL_ALTERNATIVES, Pf2eSkills, Pf2eMiscSkills);
 const PF2E_SKILLS_LIST_PARSER = createSkillsListParser(PF2E_SKILL_NAME_PARSER);
 const PF2E_DC_PARSER = createDcParser();
 
-export const PF2E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(PF2E_SKILLS_LIST_PARSER, PF2E_DC_PARSER);
+export const PF2E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(GameSystem.PF2E, PF2E_SKILLS_LIST_PARSER, PF2E_DC_PARSER);
 
 /**
  * Parses a PF2e natural language skill check string into an InlineCheck object

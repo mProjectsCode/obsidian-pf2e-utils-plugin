@@ -168,24 +168,23 @@ describe('PF1e Scanner', () => {
 	describe('Skill Name Variations', () => {
 		test('should handle skill abbreviations and alternatives where applicable', () => {
 			// Test some common abbreviations that might appear in text
-			const input1 = 'Make a DC 15 UMD check.'; // Use Magic Device abbreviation
-			const results1 = scanForPf1eChecks(input1);
-			// This might not work depending on implementation, just testing
-
-			const input2 = 'Try a DC 20 Sleight of Hand check.';
-			const results2 = scanForPf1eChecks(input2);
-			expect(results2).toHaveLength(1);
-			expect(results2[0].check.type).toEqual([Pf1eSkills.SleightOfHand]);
+			const input1 = 'Make a UMD DC 15 check.'; // Use Magic Device abbreviation
+			const results = scanForPf1eChecks(input1);
+			expect(results).toHaveLength(1);
+			expect(results[0].check.type).toEqual([Pf1eSkills.UseMagicDevice]);
+			expect(results[0].check.dc).toBe(15);
 		});
 
 		test('should handle skills with extra descriptive text', () => {
-			// These should NOT match as they have extra descriptive text
-			const invalidInputs = ['DC 15 Diplomacy (fast talk)', 'DC 15 Craft (weaponsmithing)', 'DC 15 Perform (comedy)'];
+			// these should match, but only the skill and DC should be captured, no extra text
+			const inputs = ['DC 15 Diplomacy (fast talk)', 'DC 15 Craft (weaponsmithing)', 'DC 15 Perform (comedy)'];
 
-			invalidInputs.forEach(input => {
+			inputs.forEach(input => {
 				const results = scanForPf1eChecks(input);
-				// These might not match or might match partially depending on implementation
-				// The test documents the current behavior
+				expect(results).toHaveLength(1);
+				expect(results[0].check.dc).toBe(15);
+				expect(results[0].text).not.toInclude('('); // should not include the parentheses part
+				expect(results[0].text).not.toInclude(')'); // should not include the parentheses part
 			});
 		});
 	});

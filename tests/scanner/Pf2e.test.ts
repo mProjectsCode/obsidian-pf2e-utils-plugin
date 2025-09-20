@@ -155,4 +155,28 @@ describe('PF2e Scanner', () => {
 			expect(results[0].check.dc).toBe(20);
 		});
 	});
+
+	describe('Skill Name Variations', () => {
+		test('should handle skill abbreviations and alternatives where applicable', () => {
+			// Test some common abbreviations that might appear in text
+			const input1 = 'Make a ACR DC 15 check.'; // Acrobatics abbreviation
+			const results = scanForPf2eChecks(input1);
+			expect(results).toHaveLength(1);
+			expect(results[0].check.type).toEqual([Pf2eSkills.Acrobatics]);
+			expect(results[0].check.dc).toBe(15);
+		});
+
+		test('should handle skills with extra descriptive text', () => {
+			// these should match, but only the skill and DC should be captured, no extra text
+			const inputs = ['DC 15 Diplomacy (fast talk)', 'DC 15 Lore (weaponsmithing)', 'DC 15 Performance (comedy)'];
+
+			test.each(inputs)('"%s"', input => {
+				const results = scanForPf2eChecks(input);
+				expect(results).toHaveLength(1);
+				expect(results[0].check.dc).toBe(15);
+				expect(results[0].text).not.toInclude('('); // should not include the parentheses part
+				expect(results[0].text).not.toInclude(')'); // should not include the parentheses part
+			});
+		});
+	});
 });

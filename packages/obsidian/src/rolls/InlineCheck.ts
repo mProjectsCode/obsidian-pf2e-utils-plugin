@@ -14,7 +14,13 @@ import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
 // @Check[deception|defense:perception]
 // @Check[reflex|against:class-spell|basic]
 
+export enum GameSystem {
+	PF1E = 'pf1e',
+	PF2E = 'pf2e',
+}
+
 export interface InlineCheck {
+	system: GameSystem;
 	type: string[];
 	dc?: number;
 	traits?: string[];
@@ -67,7 +73,7 @@ const ADJUSTMENT_PARSER: Parser<Pick<InlineCheck, 'adjustment'>> = P.sequenceMap
 
 const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 	(type, rest) => {
-		const res = { type };
+		const res = { type, system: GameSystem.PF2E };
 		for (const part of rest) {
 			Object.assign(res, part);
 		}

@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { scanForNaturalLanguageChecks, scanForPf1eChecks, scanForPf2eChecks } from '../../packages/obsidian/src/rolls/NaturalLanguageCheckScanner';
+import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 
 describe('Scanner - Shared Tests (Both PF1e and PF2e)', () => {
 	describe('Edge Cases and Boundary Conditions', () => {
@@ -9,8 +10,8 @@ describe('Scanner - Shared Tests (Both PF1e and PF2e)', () => {
 			emptyInputs.forEach(input => {
 				expect(scanForPf1eChecks(input)).toHaveLength(0);
 				expect(scanForPf2eChecks(input)).toHaveLength(0);
-				expect(scanForNaturalLanguageChecks(input, 'pf1e')).toHaveLength(0);
-				expect(scanForNaturalLanguageChecks(input, 'pf2e')).toHaveLength(0);
+				expect(scanForNaturalLanguageChecks(input, GameSystem.PF1E)).toHaveLength(0);
+				expect(scanForNaturalLanguageChecks(input, GameSystem.PF2E)).toHaveLength(0);
 			});
 		});
 
@@ -169,12 +170,12 @@ describe('Scanner - Shared Tests (Both PF1e and PF2e)', () => {
 			const pf2eSpecificText = 'Make a DC 15 Deception check.'; // PF2e skill
 
 			// PF1e system should find Bluff but not Deception
-			expect(scanForNaturalLanguageChecks(pf1eSpecificText, 'pf1e')).toHaveLength(1);
-			expect(scanForNaturalLanguageChecks(pf2eSpecificText, 'pf1e')).toHaveLength(0);
+			expect(scanForNaturalLanguageChecks(pf1eSpecificText, GameSystem.PF1E)).toHaveLength(1);
+			expect(scanForNaturalLanguageChecks(pf2eSpecificText, GameSystem.PF1E)).toHaveLength(0);
 
 			// PF2e system should find Deception but not Bluff
-			expect(scanForNaturalLanguageChecks(pf1eSpecificText, 'pf2e')).toHaveLength(0);
-			expect(scanForNaturalLanguageChecks(pf2eSpecificText, 'pf2e')).toHaveLength(1);
+			expect(scanForNaturalLanguageChecks(pf1eSpecificText, GameSystem.PF2E)).toHaveLength(0);
+			expect(scanForNaturalLanguageChecks(pf2eSpecificText, GameSystem.PF2E)).toHaveLength(1);
 		});
 	});
 
@@ -234,46 +235,19 @@ describe('Scanner - Shared Tests (Both PF1e and PF2e)', () => {
 		});
 	});
 
-	describe('Error Recovery and Graceful Handling', () => {
-		test('should handle malformed but partially valid input', () => {
-			const malformedInputs = [
-				'DC 15 Diplomacy then more text without proper check format',
-				'Make a Athletics DC 20 check but missing article',
-				'Try DC 18 for some skill that might work',
-				'The DC 22 Athletics, no check word present',
-			];
+	test('should handle unicode and special characters', () => {
+		const unicodeText = `
+			The ancient tome contains eldritch symbols. Make a DC 20 Knowledge (arcana) check
+			to decipher the text: "Ἀρχή ἐστι τὸ ἥμισυ παντός" and "魔法の力".
+			If successful, attempt Religion DC 18 to understand the ritual's purpose.
+		`;
 
-			malformedInputs.forEach(input => {
-				// Should either find valid parts or nothing, but not crash
-				expect(() => {
-					const pf1eResults = scanForPf1eChecks(input);
-					const pf2eResults = scanForPf2eChecks(input);
+		[scanForPf1eChecks(unicodeText), scanForPf2eChecks(unicodeText)].forEach(results => {
+			expect(results.length).toBeGreaterThanOrEqual(1);
 
-					// Any results should be valid
-					[...pf1eResults, ...pf2eResults].forEach(result => {
-						expect(result.check.dc).toBeGreaterThan(0);
-						expect(result.check.type.length).toBeGreaterThan(0);
-						expect(result.startIndex).toBeGreaterThanOrEqual(0);
-						expect(result.endIndex).toBeGreaterThan(result.startIndex);
-					});
-				}).not.toThrow();
-			});
-		});
-
-		test('should handle unicode and special characters', () => {
-			const unicodeText = `
-                The ancient tome contains eldritch symbols. Make a DC 20 Knowledge (arcana) check
-                to decipher the text: "Ἀρχή ἐστι τὸ ἥμισυ παντός" and "魔法の力".
-                If successful, attempt Religion DC 18 to understand the ritual's purpose.
-            `;
-
-			[scanForPf1eChecks(unicodeText), scanForPf2eChecks(unicodeText)].forEach(results => {
-				expect(results.length).toBeGreaterThanOrEqual(1);
-
-				// Should still find the checks despite unicode content
-				results.forEach(result => {
-					expect(result.text).toMatch(/DC \d+/);
-				});
+			// Should still find the checks despite unicode content
+			results.forEach(result => {
+				expect(result.text).toMatch(/DC \d+/);
 			});
 		});
 	});

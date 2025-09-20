@@ -15,6 +15,18 @@ export default class MyPlugin extends Plugin {
 		this.registerMarkdownPostProcessor((el, ctx) => {
 			const codeBlocks = el.querySelectorAll('code');
 
+			const levelProp = (ctx.frontmatter as Record<string, unknown> | undefined)?.level;
+			let level: number | undefined;
+			if (typeof levelProp === 'number') {
+				level = levelProp;
+			}
+			if (typeof levelProp === 'string') {
+				const parsed = parseInt(levelProp, 10);
+				if (!isNaN(parsed)) {
+					level = parsed;
+				}
+			}
+
 			for (let index = 0; index < codeBlocks.length; index++) {
 				const codeBlock = codeBlocks.item(index);
 
@@ -24,7 +36,7 @@ export default class MyPlugin extends Plugin {
 
 				const content = codeBlock.innerText.trim();
 				if (content.startsWith('@Check[') && content.endsWith(']')) {
-					ctx.addChild(new InlineCheckMDRC(codeBlock, content));
+					ctx.addChild(new InlineCheckMDRC(codeBlock, content, level));
 				}
 			}
 		});

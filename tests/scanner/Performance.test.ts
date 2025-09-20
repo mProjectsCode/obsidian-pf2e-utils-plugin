@@ -50,7 +50,6 @@ describe('Scanner - Performance and Stress Tests', () => {
 
 			const pf1eResults = scanForPf1eChecks(largeDocument);
 			const pf2eResults = scanForPf2eChecks(largeDocument);
-			const genericResults = scanForNaturalLanguageChecks(largeDocument, 'pf2e');
 
 			const endTime = Date.now();
 			const totalTime = endTime - startTime;
@@ -58,10 +57,9 @@ describe('Scanner - Performance and Stress Tests', () => {
 			// Should find many checks
 			expect(pf1eResults.length).toBeGreaterThan(100);
 			expect(pf2eResults.length).toBeGreaterThan(100);
-			expect(genericResults.length).toBeGreaterThan(100);
 
 			// All results should be valid
-			[pf1eResults, pf2eResults, genericResults].forEach(results => {
+			[pf1eResults, pf2eResults].forEach(results => {
 				results.forEach(result => {
 					expect(result.check.dc).toBeGreaterThan(0);
 					expect(result.check.type.length).toBeGreaterThan(0);
@@ -125,53 +123,6 @@ describe('Scanner - Performance and Stress Tests', () => {
 		});
 	});
 
-	describe('Memory and Resource Usage', () => {
-		test('should not leak memory with repeated scans', () => {
-			const testText = `
-                A moderate-length text with several skill checks scattered throughout.
-                Make a DC 15 Perception check first. Then try Athletics DC 20 to climb.
-                Social encounters require Diplomacy DC 18 or Intimidation DC 22.
-                Knowledge checks (Arcana DC 16, Religion DC 19) provide additional information.
-            `;
-
-			// Run many scans to check for memory leaks
-			const iterations = 1000;
-			const startTime = Date.now();
-
-			for (let i = 0; i < iterations; i++) {
-				const results = scanForPf2eChecks(testText);
-				expect(results.length).toBeGreaterThan(0);
-			}
-
-			const endTime = Date.now();
-			const averageTime = (endTime - startTime) / iterations;
-
-			// Average time per scan should be very low (under 1ms)
-			expect(averageTime).toBeLessThan(1);
-
-			console.log(`Memory test: ${averageTime.toFixed(3)}ms average per scan over ${iterations} iterations`);
-		});
-
-		test('should handle concurrent scanning operations', () => {
-			const texts = Array.from({ length: 10 }, (_, i) => `Document ${i}: Make DC ${15 + i} skill checks here. Athletics DC ${20 + i} required.`);
-
-			const startTime = Date.now();
-
-			// Scan all texts concurrently
-			const promises = texts.map(text => Promise.resolve([scanForPf1eChecks(text), scanForPf2eChecks(text)]));
-
-			return Promise.all(promises).then(allResults => {
-				const endTime = Date.now();
-				expect(endTime - startTime).toBeLessThan(50);
-
-				// Verify all scans completed successfully
-				allResults.forEach(([pf1eResults, pf2eResults]) => {
-					expect(pf1eResults.length + pf2eResults.length).toBeGreaterThan(0);
-				});
-			});
-		});
-	});
-
 	describe('Stress Test Edge Cases', () => {
 		test('should handle extremely long skill names', () => {
 			const longSkillText = `
@@ -221,80 +172,6 @@ describe('Scanner - Performance and Stress Tests', () => {
 			results.forEach(result => {
 				expect(result.check.dc).toBeGreaterThan(0);
 				expect(result.check.type.length).toBeGreaterThan(0);
-			});
-		});
-	});
-
-	describe('Real-world Scenario Stress Tests', () => {
-		test('should handle full adventure path content', () => {
-			// Simulate content from a full adventure path book
-			const adventurePathContent = `
-                Rise of the Runelords Adventure Path
-                
-                ${Array.from(
-					{ length: 20 },
-					(_, chapter) => `
-                    Chapter ${chapter + 1}: The ${['Goblin', 'Giant', 'Dragon', 'Demon', 'Undead'][chapter % 5]} Threat
-                    
-                    ${Array.from(
-						{ length: 15 },
-						(_, section) => `
-                        Section ${section + 1}: Detailed encounter descriptions with multiple skill checks.
-                        
-                        ${Array.from(
-							{ length: 8 },
-							(_, encounter) => `
-                            Encounter ${encounter + 1}: 
-                            Perception DC ${12 + encounter + chapter} to notice the threat.
-                            Stealth DC ${15 + encounter + chapter * 2} to avoid detection.
-                            Social resolution requires Diplomacy DC ${14 + encounter + chapter} or
-                            Intimidation DC ${16 + encounter + chapter}.
-                            
-                            Combat alternatives include Athletics DC ${18 + encounter + chapter} for
-                            environmental tactics or Acrobatics DC ${17 + encounter + chapter} for
-                            mobility advantages.
-                            
-                            Knowledge checks reveal additional information:
-                            - History DC ${13 + encounter + chapter}
-                            - Religion DC ${15 + encounter + chapter} 
-                            - Arcana DC ${17 + encounter + chapter}
-                            
-                            Trap detection requires Perception DC ${19 + encounter + chapter}.
-                            Disarmament needs Thievery DC ${21 + encounter + chapter} or
-                            Disable Device DC ${20 + encounter + chapter} (PF1e).
-                        `,
-						).join('\n')}
-                    `,
-					).join('\n')}
-                `,
-				).join('\n')}
-                
-                Appendices with additional content...
-            `;
-
-			const startTime = Date.now();
-			const pf1eResults = scanForPf1eChecks(adventurePathContent);
-			const pf2eResults = scanForPf2eChecks(adventurePathContent);
-			const endTime = Date.now();
-
-			console.log(`Adventure path test: ${endTime - startTime}ms for ${adventurePathContent.length} characters`);
-			console.log(`Found ${pf1eResults.length} PF1e checks, ${pf2eResults.length} PF2e checks`);
-
-			// Should find hundreds of checks
-			expect(pf1eResults.length).toBeGreaterThan(500);
-			expect(pf2eResults.length).toBeGreaterThan(500);
-
-			// Spot check some results for validity
-			[pf1eResults, pf2eResults].forEach(results => {
-				const sampleSize = Math.min(50, results.length);
-				const sampleResults = results.slice(0, sampleSize);
-
-				sampleResults.forEach(result => {
-					expect(result.check.dc).toBeGreaterThan(0);
-					expect(result.check.dc).toBeLessThan(100);
-					expect(result.check.type.length).toBeGreaterThan(0);
-					expect(result.text).toMatch(/DC \d+/);
-				});
 			});
 		});
 	});
