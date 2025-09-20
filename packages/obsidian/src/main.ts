@@ -1,10 +1,17 @@
-import { Plugin } from 'obsidian';
+import type { TFile, WorkspaceLeaf } from 'obsidian';
+import { Notice, Plugin } from 'obsidian';
 import { InlineCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
+import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguageCheckFinder';
+import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 import type { MyPluginSettings } from 'packages/obsidian/src/settings/Settings';
 import { DEFAULT_SETTINGS } from 'packages/obsidian/src/settings/Settings';
 import { SampleSettingTab } from 'packages/obsidian/src/settings/SettingTab';
+import { CheckFinderView } from 'packages/obsidian/src/ui/CheckFinderView';
 
-export default class MyPlugin extends Plugin {
+const VIEW_TYPE_CHECK_FINDER_PF2E = 'pf2e-utils-check-finder-pf2e';
+const VIEW_TYPE_CHECK_FINDER_PF1E = 'pf2e-utils-check-finder-pf1e';
+
+export default class Pf2eUtilsPlugin extends Plugin {
 	settings!: MyPluginSettings;
 
 	async onload(): Promise<void> {
@@ -40,6 +47,32 @@ export default class MyPlugin extends Plugin {
 				}
 			}
 		});
+
+		this.registerView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf => {
+			const checkFinder = new NaturalLanguageCheckFinder(this, GameSystem.PF2E);
+			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf, this, checkFinder);
+		});
+
+		this.registerView(VIEW_TYPE_CHECK_FINDER_PF1E, leaf => {
+			const checkFinder = new NaturalLanguageCheckFinder(this, GameSystem.PF1E);
+			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF1E, leaf, this, checkFinder);
+		});
+
+		this.addCommand({
+			id: 'open-check-finder-pf2e',
+			name: 'Open PF2E Check Finder',
+			callback: async () => {
+				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);
+			},
+		});
+
+		this.addCommand({
+			id: 'open-check-finder-pf1e',
+			name: 'Open PF1E Check Finder',
+			callback: async () => {
+				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF1E);
+			},
+		});
 	}
 
 	onunload(): void {}
@@ -50,5 +83,62 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+	}
+
+	async activateView(viewType: string): Promise<void> {
+		const { workspace } = this.app;
+
+		let leaf: WorkspaceLeaf | null;
+		const leaves = workspace.getLeavesOfType(viewType);
+
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = workspace.getLeaf('tab');
+			await leaf.setViewState({ type: viewType, active: true });
+		}
+
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		await workspace.revealLeaf(leaf);
+	}
+
+	/**
+	 * Replaces a string at a specific index in a file.
+	 * This checks that the string at the index matches the expected string before replacing it.
+	 * If the string matches and the replacement is successful, it returns true.
+	 * If the replacement was unsuccessful (e.g., the string at the index has changed), it returns false.
+	 *
+	 * @param file the file to replace in
+	 * @param index the start index of the expected string
+	 * @param expected the expected string at the position
+	 * @param replacement the replacement string for the expected string
+	 * @returns
+	 */
+	async safeReplaceAtIndex(file: TFile, index: number, expected: string, replacement: string): Promise<boolean> {
+		try {
+			let modified = false;
+			await this.app.vault.process(file, text => {
+				const pre = text.slice(0, index);
+				const post = text.slice(index + expected.length);
+				const oldText = text.slice(index, index + expected.length);
+
+				if (oldText !== expected) {
+					new Notice('Failed to replace text. The text has changed since it was found.');
+					return text;
+				}
+
+				modified = true;
+				return pre + replacement + post;
+			});
+
+			return modified;
+		} catch (e) {
+			new Notice('Failed to replace text. See the console for more info.');
+			console.warn(e);
+			return false;
+		}
 	}
 }

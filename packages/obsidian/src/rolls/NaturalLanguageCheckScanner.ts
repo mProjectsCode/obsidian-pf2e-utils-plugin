@@ -25,6 +25,12 @@ export interface CheckScanResult {
 	startIndex: number;
 	/** Ending index of the match in the original input (exclusive) */
 	endIndex: number;
+	/** The full line of text containing the match */
+	line: string;
+	/** The starting index of the match within the line */
+	lineStartIndex: number;
+	/** The ending index of the match within the line (exclusive) */
+	lineEndIndex: number;
 }
 
 /**
@@ -35,8 +41,6 @@ export interface CheckScanResult {
  * @returns Array of scan results containing parsed checks and their locations
  */
 export function scanForNaturalLanguageChecks(input: string, system: GameSystem): CheckScanResult[] {
-	const lowerText = input.toLowerCase();
-
 	const results: CheckScanResult[] = [];
 
 	// Get the appropriate parser function
@@ -68,27 +72,38 @@ export function scanForNaturalLanguageChecks(input: string, system: GameSystem):
 	}
 	trie.insert('dc', 'DC');
 
-	for (let i = 0; i < lowerText.length; i++) {
-		const longestPrefix = trie.findLongestPrefix(lowerText, i);
+	const lines = input.split('\n');
+	let index = 0;
+	for (const line of lines) {
+		const lowerLine = line.toLowerCase();
 
-		if (longestPrefix) {
-			const subStr = lowerText.slice(i);
+		for (let i = 0; i < lowerLine.length; i++) {
+			const longestPrefix = trie.findLongestPrefix(lowerLine, i);
 
-			const result = parser.tryParse(subStr);
-			if (result.success) {
-				const endIndex = i + result.value[1].index;
-				const match = input.slice(i, endIndex);
+			if (longestPrefix) {
+				const subStr = lowerLine.slice(i);
 
-				results.push({
-					check: result.value[0],
-					text: match,
-					startIndex: i,
-					endIndex: endIndex,
-				});
+				const result = parser.tryParse(subStr);
+				if (result.success) {
+					const endIndex = i + result.value[1].index;
+					const match = line.slice(i, endIndex);
 
-				i = endIndex - 1; // Move index to end of matched segment
+					results.push({
+						check: result.value[0],
+						text: match,
+						startIndex: index + i,
+						endIndex: index + endIndex,
+						line: line,
+						lineStartIndex: i,
+						lineEndIndex: endIndex,
+					});
+
+					i = endIndex - 1; // Move index to end of matched segment
+				}
 			}
 		}
+
+		index += line.length + 1; // +1 for the newline character
 	}
 
 	// Sort results by start index

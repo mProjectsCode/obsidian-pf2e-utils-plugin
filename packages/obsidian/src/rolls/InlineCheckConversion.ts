@@ -32,6 +32,9 @@
 // 27	24	28	25	29	27	30	28	31	29	32	31	33	32	34	33	35	35	36	36	37	37	38	39	39	40	40	41	41	43	42	44	43	45	44	47	45	48	46	49
 // 28	25	29	26	30	28	31	29	32	30	33	32	34	33	35	34	36	36	37	37	38	38	39	40	40	41	41	42	42	44	43	45	44	46	45	48	46	49	47	50
 
+import type { Pf1eMiscSkills, Pf1eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import { SKILL_MAP } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+
 interface DCTableEntry {
 	// the starting PF1e DC
 	pf1eOffset: number;
@@ -129,4 +132,8 @@ export function pf2eCheckDifficulty(level: number, pf2eDC: number): Pf2eCheckDif
 	if (diff < 5) return Pf2eCheckDifficulty.HARD;
 	if (diff < 10) return Pf2eCheckDifficulty.VERY_HARD;
 	return Pf2eCheckDifficulty.INCREDIBLY_HARD;
+}
+
+export function convertPf1eSkillToPf2eSkill(pf1eSkill: string): string[] {
+	return SKILL_MAP[pf1eSkill as Pf1eSkills | Pf1eMiscSkills] || [pf1eSkill];
 }

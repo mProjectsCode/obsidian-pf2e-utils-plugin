@@ -25,6 +25,7 @@ export class InlineCheckMDRC extends MarkdownRenderChild {
 				new Notice('Copied raw inline check to clipboard');
 			});
 			span.setAttribute('aria-label', this.getTooltip());
+			span.setAttribute('data-tooltip-delay', '100');
 			console.log(this);
 		} else {
 			this.containerEl.createEl('span', { text: 'Invalid Inline Check', cls: 'error' });

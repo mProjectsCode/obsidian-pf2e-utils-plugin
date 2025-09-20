@@ -177,3 +177,56 @@ export function formatInlineCheck(check: InlineCheck): string {
 
 	return parts.join(' ');
 }
+
+/**
+ * Turns the InlineCheck object into a foundryvtt pf2e inline check string.
+ *
+ * @param check The InlineCheck object to convert to string format
+ * @returns A foundryvtt pf2e inline check string like "@Check[fortitude|dc:20|basic]"
+ *
+ * @example
+ * // Basic check: "@Check[fortitude|dc:20|basic]"
+ * stringifyInlineCheck({ type: ['fortitude'], dc: 20, basic: true, system: GameSystem.PF2E })
+ *
+ * // Multiple skills: "@Check[crafting,thievery|dc:20|adjustment:0,-2]"
+ * stringifyInlineCheck({ type: ['crafting', 'thievery'], dc: 20, adjustment: [0, -2], system: GameSystem.PF2E })
+ */
+export function stringifyInlineCheck(check: InlineCheck): string {
+	const parts: string[] = [];
+
+	// Start with the type(s)
+	parts.push(check.type.join(','));
+
+	// Add DC if present
+	if (check.dc !== undefined) {
+		parts.push(`dc:${check.dc}`);
+	}
+
+	// Add traits if present
+	if (check.traits && check.traits.length > 0) {
+		parts.push(`traits:${check.traits.join(',')}`);
+	}
+
+	// Add defense if present
+	if (check.defense) {
+		parts.push(`defense:${check.defense}`);
+	}
+
+	// Add against if present
+	if (check.against) {
+		parts.push(`against:${check.against}`);
+	}
+
+	// Add adjustment if present
+	if (check.adjustment && check.adjustment.length > 0) {
+		const adjustmentStr = check.adjustment.map(adj => (adj >= 0 && adj !== 0 ? `${adj}` : `${adj}`)).join(',');
+		parts.push(`adjustment:${adjustmentStr}`);
+	}
+
+	// Add basic flag if present
+	if (check.basic) {
+		parts.push('basic');
+	}
+
+	return `@Check[${parts.join('|')}]`;
+}

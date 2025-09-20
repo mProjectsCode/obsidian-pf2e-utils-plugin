@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { INLINE_CHECK_PARSER, type InlineCheck } from '../packages/obsidian/src/rolls/InlineCheck';
+import { INLINE_CHECK_PARSER, type InlineCheck, stringifyInlineCheck, GameSystem } from '../packages/obsidian/src/rolls/InlineCheck';
 
 describe('Inline Check Parser', () => {
 	describe('Example Cases', () => {
@@ -288,6 +288,171 @@ describe('Inline Check Parser', () => {
 				expect(check.type).toEqual(['fortitude']);
 				expect(check.dc).toBe(20);
 				expect(check.basic).toBe(true);
+			}
+		});
+	});
+});
+
+describe('stringifyInlineCheck', () => {
+	describe('Basic Cases', () => {
+		test.each([
+			{
+				description: 'basic fortitude check with DC',
+				check: { type: ['fortitude'], dc: 20, basic: true, system: GameSystem.PF2E },
+				expected: '@Check[fortitude|dc:20|basic]',
+			},
+			{
+				description: 'flat check with DC only',
+				check: { type: ['flat'], dc: 4, system: GameSystem.PF2E },
+				expected: '@Check[flat|dc:4]',
+			},
+			{
+				description: 'athletics check with DC and traits',
+				check: { type: ['athletics'], dc: 20, traits: ['action:long-jump'], system: GameSystem.PF2E },
+				expected: '@Check[athletics|dc:20|traits:action:long-jump]',
+			},
+			{
+				description: 'deception check with defense parameter',
+				check: { type: ['deception'], defense: 'perception', system: GameSystem.PF2E },
+				expected: '@Check[deception|defense:perception]',
+			},
+			{
+				description: 'reflex check with against parameter and basic flag',
+				check: { type: ['reflex'], against: 'class-spell', basic: true, system: GameSystem.PF2E },
+				expected: '@Check[reflex|against:class-spell|basic]',
+			},
+		])('should stringify $description', ({ check, expected }) => {
+			expect(stringifyInlineCheck(check)).toBe(expected);
+		});
+	});
+
+	describe('Multiple Skills', () => {
+		test.each([
+			{
+				description: 'multiple skill types with DC',
+				check: { type: ['arcane', 'occultism'], dc: 20, system: GameSystem.PF2E },
+				expected: '@Check[arcane,occultism|dc:20]',
+			},
+			{
+				description: 'multiple skills with DC and adjustments',
+				check: { type: ['crafting', 'thievery'], dc: 20, adjustment: [0, -2], system: GameSystem.PF2E },
+				expected: '@Check[crafting,thievery|dc:20|adjustment:0,-2]',
+			},
+			{
+				description: 'check with all parameters',
+				check: {
+					type: ['athletics', 'acrobatics'],
+					dc: 15,
+					traits: ['action:climb'],
+					defense: 'ac',
+					against: 'spell',
+					adjustment: [2, -1],
+					basic: true,
+					system: GameSystem.PF2E,
+				},
+				expected: '@Check[athletics,acrobatics|dc:15|traits:action:climb|defense:ac|against:spell|adjustment:2,-1|basic]',
+			},
+		])('should stringify $description', ({ check, expected }) => {
+			expect(stringifyInlineCheck(check)).toBe(expected);
+		});
+	});
+
+	describe('Adjustments', () => {
+		test.each([
+			{
+				description: 'check with positive and negative adjustments',
+				check: { type: ['stealth'], dc: 18, adjustment: [5, -3, 0, 2], system: GameSystem.PF2E },
+				expected: '@Check[stealth|dc:18|adjustment:5,-3,0,2]',
+			},
+			{
+				description: 'check with positive adjustment only',
+				check: { type: ['perception'], adjustment: [10], system: GameSystem.PF2E },
+				expected: '@Check[perception|adjustment:10]',
+			},
+			{
+				description: 'check with negative adjustment only',
+				check: { type: ['medicine'], adjustment: [-5], system: GameSystem.PF2E },
+				expected: '@Check[medicine|adjustment:-5]',
+			},
+			{
+				description: 'check with zero adjustment',
+				check: { type: ['diplomacy'], adjustment: [0], system: GameSystem.PF2E },
+				expected: '@Check[diplomacy|adjustment:0]',
+			},
+		])('should stringify $description', ({ check, expected }) => {
+			expect(stringifyInlineCheck(check)).toBe(expected);
+		});
+	});
+
+	describe('Complex Traits', () => {
+		test.each([
+			{
+				description: 'check with complex traits',
+				check: { type: ['medicine'], dc: 25, traits: ['action:treat-wounds:expert'], system: GameSystem.PF2E },
+				expected: '@Check[medicine|dc:25|traits:action:treat-wounds:expert]',
+			},
+			{
+				description: 'check with multiple traits',
+				check: { type: ['survival'], traits: ['exploration', 'downtime'], system: GameSystem.PF2E },
+				expected: '@Check[survival|traits:exploration,downtime]',
+			},
+			{
+				description: 'check with multiple traits and other parameters',
+				check: { type: ['intimidation'], dc: 15, traits: ['emotion', 'fear', 'mental'], basic: true, system: GameSystem.PF2E },
+				expected: '@Check[intimidation|dc:15|traits:emotion,fear,mental|basic]',
+			},
+		])('should stringify $description', ({ check, expected }) => {
+			expect(stringifyInlineCheck(check)).toBe(expected);
+		});
+	});
+
+	describe('Minimal Cases', () => {
+		test.each([
+			{
+				description: 'check with only skill type',
+				check: { type: ['perception'], system: GameSystem.PF2E },
+				expected: '@Check[perception]',
+			},
+			{
+				description: 'check with single character skill name',
+				check: { type: ['a'], system: GameSystem.PF2E },
+				expected: '@Check[a]',
+			},
+			{
+				description: 'check with hyphenated skill name',
+				check: { type: ['skill-with-hyphens'], system: GameSystem.PF2E },
+				expected: '@Check[skill-with-hyphens]',
+			},
+		])('should stringify $description', ({ check, expected }) => {
+			expect(stringifyInlineCheck(check)).toBe(expected);
+		});
+	});
+
+	describe('Round-trip Compatibility', () => {
+		test.each([
+			'@Check[fortitude|dc:20|basic]',
+			'@Check[athletics|dc:20|traits:action:long-jump]',
+			'@Check[flat|dc:4]',
+			'@Check[arcane,occultism|dc:20]',
+			'@Check[crafting,thievery|dc:20|adjustment:0,-2]',
+			'@Check[deception|defense:perception]',
+			'@Check[reflex|against:class-spell|basic]',
+			'@Check[athletics,acrobatics|dc:15|traits:action:climb|defense:ac|against:spell|adjustment:2,-1|basic]',
+			'@Check[stealth|dc:18|adjustment:5,-3,0,2]',
+			'@Check[medicine|dc:25|traits:action:treat-wounds:expert]',
+			'@Check[perception]',
+		])('should round-trip parse and stringify for %p', (original: string) => {
+			const parseResult = INLINE_CHECK_PARSER.tryParse(original);
+			expect(parseResult.success).toBe(true);
+
+			if (parseResult.success) {
+				const stringified = stringifyInlineCheck(parseResult.value);
+				const reparsed = INLINE_CHECK_PARSER.tryParse(stringified);
+
+				expect(reparsed.success).toBe(true);
+				if (reparsed.success) {
+					expect(reparsed.value).toEqual(parseResult.value);
+				}
 			}
 		});
 	});

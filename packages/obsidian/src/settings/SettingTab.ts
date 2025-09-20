@@ -1,11 +1,11 @@
 import type { App } from 'obsidian';
 import { PluginSettingTab, Setting } from 'obsidian';
-import type MyPlugin from 'packages/obsidian/src/main';
+import type Pf2eUtilsPlugin from 'packages/obsidian/src/main';
 
 export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: Pf2eUtilsPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: Pf2eUtilsPlugin) {
 		super(app, plugin);
 
 		this.plugin = plugin;
