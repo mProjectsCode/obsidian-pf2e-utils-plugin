@@ -15,8 +15,8 @@ import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
 // @Check[reflex|against:class-spell|basic]
 
 export enum GameSystem {
-	PF1E = 'pf1e',
-	PF2E = 'pf2e',
+	PF1E = 'PF1E',
+	PF2E = 'PF2E',
 }
 
 export interface InlineCheck {
