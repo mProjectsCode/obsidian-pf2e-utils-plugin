@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { CheckScanResult } from '../rolls/NaturalLanguageCheckScanner';
 
-	let { check }: { check: CheckScanResult } = $props();
+	let { check = $bindable() }: { check: CheckScanResult } = $props();
 
 	let pre = $derived(check.line.substring(0, check.lineStartIndex));
 	let post = $derived(check.line.substring(check.lineEndIndex));

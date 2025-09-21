@@ -130,9 +130,9 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each checks.slice(0, 100) as result}
+			{#each checks.slice(0, 100) as result, i}
 				<tr>
-					<td><CheckHighlight check={result}></CheckHighlight></td>
+					<td><CheckHighlight bind:check={checks[i]}></CheckHighlight></td>
 					<td>
 						<button onclick={() => void transformCheck(result)} disabled={locked}>
 							{view.checkFinder.formatCheck(result.check)}
