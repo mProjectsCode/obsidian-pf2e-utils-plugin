@@ -3,10 +3,8 @@
 
 	let { check }: { check: CheckScanResult } = $props();
 
-	let c = $state(check);
-
-	let pre = $derived(c.line.substring(0, c.lineStartIndex));
-	let post = $derived(c.line.substring(c.lineEndIndex));
+	let pre = $derived(check.line.substring(0, check.lineStartIndex));
+	let post = $derived(check.line.substring(check.lineEndIndex));
 </script>
 
-{pre}<span class="ulmf-mention-highlight">{c.text}</span>{post}
+{pre}<span class="ulmf-mention-highlight">{check.text}</span>{post}
