@@ -1,7 +1,7 @@
 import { MarkdownRenderChild, Notice } from 'obsidian';
 import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
 import { formatInlineCheck, INLINE_CHECK_PARSER } from 'packages/obsidian/src/rolls/InlineCheck';
-import { pf2eCheckDifficulty, pf2eCheckRequiredProficiency, pf2eLevelBasedDC } from 'packages/obsidian/src/rolls/InlineCheckConversion';
+import { getPf2eCheckClassification } from 'packages/obsidian/src/rolls/InlineCheckConversion';
 
 export class InlineCheckMDRC extends MarkdownRenderChild {
 	private content: string;
@@ -42,31 +42,6 @@ export class InlineCheckMDRC extends MarkdownRenderChild {
 			return 'Invalid Inline Check';
 		}
 
-		const difficulty = this.getDifficultyString();
-		const requiredProf = this.getRequiredProficiencyString();
-		const secondLine = [difficulty, requiredProf].filter(Boolean).join('; ');
-
-		return `${this.content}\n${secondLine}`;
-	}
-
-	getDifficultyString(): string {
-		if (!this.check || this.level === undefined || this.check.dc === undefined) {
-			return '';
-		}
-
-		const difficulty = pf2eCheckDifficulty(this.level, this.check.dc);
-		const levelBasedDC = pf2eLevelBasedDC(this.level);
-		const diff = this.check.dc - levelBasedDC;
-		const diffSign = diff >= 0 ? '+' : '';
-		const diffStr = `${diffSign}${diff}`;
-		return `${difficulty} (${diffStr})`;
-	}
-
-	getRequiredProficiencyString(): string {
-		if (this.check?.dc === undefined) {
-			return '';
-		}
-
-		return pf2eCheckRequiredProficiency(this.check.dc);
+		return `${this.content}\n${getPf2eCheckClassification(this.check, this.level)}`;
 	}
 }

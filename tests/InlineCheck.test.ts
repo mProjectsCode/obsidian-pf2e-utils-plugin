@@ -377,7 +377,17 @@ describe('stringifyInlineCheck', () => {
 			{
 				description: 'check with zero adjustment',
 				check: { type: ['diplomacy'], adjustment: [0], system: GameSystem.PF2E },
-				expected: '@Check[diplomacy|adjustment:0]',
+				expected: '@Check[diplomacy]',
+			},
+			{
+				description: 'check with multiple zero adjustments',
+				check: { type: ['diplomacy', 'deception'], adjustment: [0, 0], system: GameSystem.PF2E },
+				expected: '@Check[diplomacy,deception]',
+			},
+			{
+				description: 'check with multiple adjustments',
+				check: { type: ['diplomacy', 'deception'], adjustment: [0, -2], system: GameSystem.PF2E },
+				expected: '@Check[diplomacy,deception|adjustment:0,-2]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
 			expect(stringifyInlineCheck(check)).toBe(expected);

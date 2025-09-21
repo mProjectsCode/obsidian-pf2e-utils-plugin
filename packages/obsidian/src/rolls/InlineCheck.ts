@@ -218,8 +218,8 @@ export function stringifyInlineCheck(check: InlineCheck): string {
 	}
 
 	// Add adjustment if present
-	if (check.adjustment && check.adjustment.length > 0) {
-		const adjustmentStr = check.adjustment.map(adj => (adj >= 0 && adj !== 0 ? `${adj}` : `${adj}`)).join(',');
+	if (check.adjustment && check.adjustment.length > 0 && !check.adjustment.every(adj => adj === 0)) {
+		const adjustmentStr = check.adjustment.map(String).join(',');
 		parts.push(`adjustment:${adjustmentStr}`);
 	}
 

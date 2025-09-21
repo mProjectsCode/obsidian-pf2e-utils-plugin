@@ -58,6 +58,8 @@ export enum Pf1eMiscSkills {
 	Charisma = 'Charisma',
 }
 
+export const ALL_PF1E_SKILLS = [...Object.values(Pf1eSkills), ...Object.values(Pf1eMiscSkills)];
+
 export enum Pf2eSkills {
 	Acrobatics = 'Acrobatics',
 	Arcana = 'Arcana',
@@ -85,7 +87,9 @@ export enum Pf2eMiscSkills {
 	Perception = 'Perception',
 }
 
-export const SKILL_MAP: Record<Pf1eSkills | Pf1eMiscSkills, (Pf2eSkills | Pf2eMiscSkills)[]> = {
+export const ALL_PF2E_SKILLS = [...Object.values(Pf2eSkills), ...Object.values(Pf2eMiscSkills)];
+
+export const PF1E_TO_PF2E_SKILL_MAP: Record<Pf1eSkills | Pf1eMiscSkills, (Pf2eSkills | Pf2eMiscSkills)[]> = {
 	[Pf1eSkills.Acrobatics]: [Pf2eSkills.Acrobatics],
 	[Pf1eSkills.Appraise]: [Pf2eSkills.Society, Pf2eSkills.Crafting],
 	[Pf1eSkills.Bluff]: [Pf2eSkills.Deception],

@@ -5,6 +5,10 @@
 	import type { CheckScanResult } from '../rolls/NaturalLanguageCheckScanner';
 	import { formatInlineCheck } from '../rolls/InlineCheck';
 	import { FilePrompt } from './FilePrompt';
+	import { openLevelUpdateModal } from './LevelUpdateModal';
+	import Button from './common/Button.svelte';
+	import { ButtonStyleType } from '../utils/misc';
+	import SettingComponent from './common/SettingComponent.svelte';
 
 	const {
 		view,
@@ -14,7 +18,20 @@
 
 	let checks: CheckScanResult[] = $state([]);
 	let locked: boolean = $state(false);
-	let file: TFile | null = $state(null);
+	let file: TFile | undefined = $state(undefined);
+	let level: number | undefined = $state(undefined);
+
+	let resultMessage = $derived.by(() => {
+		if (locked) {
+			return 'Working...';
+		} else if (file === undefined) {
+			return 'No file selected';
+		} else if (level === undefined) {
+			return 'No level set';
+		} else {
+			return `${checks.length} checks found`;
+		}
+	});
 
 	async function withLocked<T>(fn: () => Promise<T>): Promise<T> {
 		locked = true;
@@ -28,11 +45,16 @@
 	async function transformCheck(check: CheckScanResult) {
 		await withLocked(async () => {
 			if (!file) {
-				new Notice('No file selected');
 				return;
 			}
 
-			if (await view.checkFinder.convertCheck(check, file)) {
+			// for security, re-fetch the level
+			level = view.plugin.getLevelFromFrontmatter(file);
+			if (level === undefined) {
+				return;
+			}
+
+			if (await view.checkFinder.convertCheck(check, file, level)) {
 				checks = checks.filter(m => m !== check);
 				await findChecks();
 			} else {
@@ -53,22 +75,53 @@
 		new FilePrompt(view.plugin.app, async f => {
 			await withLocked(async () => {
 				file = f;
+				level = view.plugin.getLevelFromFrontmatter(f);
 				checks = [];
-				await findChecks();
+
+				if (level !== undefined) {
+					await findChecks();
+				}
 			});
 		}).open();
 	}
+
+	async function updateLevel() {
+		await withLocked(async () => {
+			if (!file) {
+				return;
+			}
+
+			level = await openLevelUpdateModal(view.plugin, file);
+			await findChecks();
+		});
+	}
 </script>
 
-<span>{file ? file.path : 'None'}</span>
+<h1>{view.getDisplayText()}</h1>
 
-<button onclick={() => selectFile()} disabled={locked}>Select File</button>
+<SettingComponent name="Selected file" description="The markdown file to search for checks.">
+	{#if file}
+		<span>{file.path}</span>
+	{:else}
+		<span>No file selected</span>
+	{/if}
+	<Button variant={ButtonStyleType.PRIMARY} onclick={() => selectFile()} disabled={locked}>Change file</Button>
+</SettingComponent>
 
-<button onclick={() => findChecks()} disabled={locked || !file}>Find Checks</button>
+<SettingComponent name="Level" description="The level to use translating DCs.">
+	{#if level !== undefined}
+		<span>{level}</span>
+	{:else}
+		<span class="mod-warning">No level set</span>
+	{/if}
+	<Button variant={ButtonStyleType.PRIMARY} onclick={() => updateLevel()} disabled={locked || !file}>Change level</Button>
+</SettingComponent>
+
+<SettingComponent name="Search" description={resultMessage}>
+	<Button variant={ButtonStyleType.PRIMARY} onclick={() => findChecks()} disabled={locked || !file || level === undefined}>Rerun search</Button>
+</SettingComponent>
 
 {#if checks.length > 0}
-	<p>Found {checks.length} checks</p>
-
 	<table style="width: 100%">
 		<thead>
 			<tr>
@@ -81,14 +134,12 @@
 				<tr>
 					<td><CheckHighlight check={result}></CheckHighlight></td>
 					<td>
-						<button onclick={() => void transformCheck(result)} disabled={locked}>{formatInlineCheck(result.check)}</button>
+						<button onclick={() => void transformCheck(result)} disabled={locked}>
+							{view.checkFinder.formatCheck(result.check)}
+						</button>
 					</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
-{:else if locked}
-	<p>Searching...</p>
-{:else}
-	<p>No mentions found</p>
 {/if}

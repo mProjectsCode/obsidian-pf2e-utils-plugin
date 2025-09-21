@@ -48,22 +48,14 @@ export default class Pf2eUtilsPlugin extends Plugin {
 			}
 		});
 
-		this.registerView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf => {
-			const checkFinder = new NaturalLanguageCheckFinder(this, GameSystem.PF2E);
-			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf, this, checkFinder);
-		});
-
 		this.registerView(VIEW_TYPE_CHECK_FINDER_PF1E, leaf => {
 			const checkFinder = new NaturalLanguageCheckFinder(this, GameSystem.PF1E);
-			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF1E, leaf, this, checkFinder);
+			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF1E, leaf, this, checkFinder, GameSystem.PF1E);
 		});
 
-		this.addCommand({
-			id: 'open-check-finder-pf2e',
-			name: 'Open PF2E Check Finder',
-			callback: async () => {
-				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);
-			},
+		this.registerView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf => {
+			const checkFinder = new NaturalLanguageCheckFinder(this, GameSystem.PF2E);
+			return new CheckFinderView(VIEW_TYPE_CHECK_FINDER_PF2E, leaf, this, checkFinder, GameSystem.PF2E);
 		});
 
 		this.addCommand({
@@ -71,6 +63,14 @@ export default class Pf2eUtilsPlugin extends Plugin {
 			name: 'Open PF1E Check Finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF1E);
+			},
+		});
+
+		this.addCommand({
+			id: 'open-check-finder-pf2e',
+			name: 'Open PF2E Check Finder',
+			callback: async () => {
+				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);
 			},
 		});
 	}
@@ -140,5 +140,19 @@ export default class Pf2eUtilsPlugin extends Plugin {
 			console.warn(e);
 			return false;
 		}
+	}
+
+	getLevelFromFrontmatter(file: TFile): number | undefined {
+		const levelProp = (this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined)?.level;
+		if (typeof levelProp === 'number') {
+			return levelProp;
+		}
+		if (typeof levelProp === 'string') {
+			const parsed = parseInt(levelProp, 10);
+			if (!isNaN(parsed)) {
+				return parsed;
+			}
+		}
+		return undefined;
 	}
 }

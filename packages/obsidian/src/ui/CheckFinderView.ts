@@ -2,6 +2,7 @@ import type { WorkspaceLeaf } from 'obsidian';
 import { ItemView } from 'obsidian';
 import type { ICheckFinder } from 'packages/obsidian/src/ICheckFinder';
 import type Pf2eUtilsPlugin from 'packages/obsidian/src/main';
+import type { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 import CheckFinderComponent from 'packages/obsidian/src/ui/CheckFinderComponent.svelte';
 import type { Component as SvelteComponent } from 'svelte';
 import { mount, unmount } from 'svelte';
@@ -11,13 +12,15 @@ export class CheckFinderView extends ItemView {
 	plugin: Pf2eUtilsPlugin;
 	checkFinder: ICheckFinder;
 	viewType: string;
+	gameSystem: GameSystem;
 
-	constructor(viewType: string, leaf: WorkspaceLeaf, plugin: Pf2eUtilsPlugin, checkFinder: ICheckFinder) {
+	constructor(viewType: string, leaf: WorkspaceLeaf, plugin: Pf2eUtilsPlugin, checkFinder: ICheckFinder, gameSystem: GameSystem) {
 		super(leaf);
 
 		this.viewType = viewType;
 		this.plugin = plugin;
 		this.checkFinder = checkFinder;
+		this.gameSystem = gameSystem;
 	}
 
 	getViewType(): string {
@@ -25,7 +28,7 @@ export class CheckFinderView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Check Finder';
+		return `${this.gameSystem} Check Finder`;
 	}
 
 	protected async onOpen(): Promise<void> {

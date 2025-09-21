@@ -6,3 +6,46 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.pf2e-flex-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.pf2e-flex-row.pf2e-flex-row-stretch > :first-child {
+	flex: 1;
+}
+
+.pf2e-flex-row-reverse {
+	display: flex;
+	flex-direction: row-reverse;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.pf2e-flex-row-reverse.pf2e-flex-row-stretch > :last-child {
+	flex: 1;
+}
+
+.pf2e-settings-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+	margin-block: var(--size-4-2);
+	margin-inline-start: var(--size-4-2);
+}
+
+.pf2e-wide-input {
+	width: 100%;
+}
+
+.pf2e-button-row {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
