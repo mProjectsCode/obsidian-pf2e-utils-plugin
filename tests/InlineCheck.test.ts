@@ -217,6 +217,18 @@ describe('Inline Check Parser', () => {
 				expect(check.dc).toBe(999);
 			}
 		});
+
+		test('should handle escaped pipes in markdown tables', () => {
+			const input = '@Check[perception\|dc:10]';
+			const result = INLINE_CHECK_PARSER.tryParse(input);
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				const check: InlineCheck = result.value;
+				expect(check.type).toEqual(['perception']);
+				expect(check.dc).toBe(10);
+			}
+		});
 	});
 
 	describe('Invalid Input', () => {

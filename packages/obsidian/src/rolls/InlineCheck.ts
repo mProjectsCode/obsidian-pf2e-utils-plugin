@@ -82,7 +82,7 @@ const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 	TYPE_PARSER.trim(P_UTILS.optionalWhitespace()),
 	P.sequenceMap(
 		(_sep, part) => part,
-		P.string('|').trim(P_UTILS.optionalWhitespace()),
+		P.or(P.string('\\|'), P.string('|')).trim(P_UTILS.optionalWhitespace()),
 		P.or(DC_PARSER, TRAITS_PARSER, DEFENSE_PARSER, AGAINST_PARSER, ADJUSTMENT_PARSER, BASIC_PARSER),
 	).many(),
 );
