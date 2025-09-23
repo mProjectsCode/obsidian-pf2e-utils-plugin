@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { Notice, TFile } from 'obsidian';
+	import { Notice, TFile, type EventRef } from 'obsidian';
 	import CheckHighlight from './CheckHighlight.svelte';
 	import { CheckFinderView } from './CheckFinderView';
 	import type { CheckScanResult } from '../rolls/NaturalLanguageCheckScanner';
-	import { formatInlineCheck } from '../rolls/InlineCheck';
 	import { FilePrompt } from './FilePrompt';
 	import { openLevelUpdateModal } from './LevelUpdateModal';
 	import Button from './common/Button.svelte';
 	import { ButtonStyleType } from '../utils/misc';
 	import SettingComponent from './common/SettingComponent.svelte';
+	import { onDestroy, untrack } from 'svelte';
 
 	const {
 		view,
@@ -64,7 +64,7 @@
 	}
 
 	async function findChecks() {
-		if (!file) {
+		if (!file || level === undefined) {
 			return;
 		}
 		const content = await view.plugin.app.vault.cachedRead(file);
@@ -91,10 +91,40 @@
 				return;
 			}
 
-			level = await openLevelUpdateModal(view.plugin, file);
-			await findChecks();
+			await openLevelUpdateModal(view.plugin, file);
 		});
 	}
+
+	let metadataRef: EventRef | undefined = undefined;
+
+	$effect(() => {
+		const currentFile = file;
+
+		untrack(() => {
+			if (metadataRef) {
+				view.app.metadataCache.offref(metadataRef);
+			}
+			metadataRef = view.app.metadataCache.on('changed', async (changedFile, _, cache) => {
+				if (currentFile?.path === changedFile.path) {
+					const newLevel = (cache?.frontmatter as Record<string, unknown>)?.level;
+					const parsedLevel = view.plugin.parseLevel(newLevel);
+
+					if (parsedLevel !== level) {
+						await withLocked(async () => {
+							level = parsedLevel;
+							await findChecks();
+						});
+					}
+				}
+			});
+		});
+	});
+
+	onDestroy(() => {
+		if (metadataRef) {
+			view.app.metadataCache.offref(metadataRef);
+		}
+	});
 </script>
 
 <h1>{view.getDisplayText()}</h1>

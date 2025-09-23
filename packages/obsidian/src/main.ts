@@ -144,6 +144,10 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 	getLevelFromFrontmatter(file: TFile): number | undefined {
 		const levelProp = (this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined)?.level;
+		return this.parseLevel(levelProp);
+	}
+
+	parseLevel(levelProp: unknown): number | undefined {
 		if (typeof levelProp === 'number') {
 			return levelProp;
 		}

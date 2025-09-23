@@ -23,11 +23,10 @@ export interface InlineCheck {
 	system: GameSystem;
 	type: string[];
 	dc?: number;
-	traits?: string[];
 	defense?: string;
-	against?: string;
 	adjustment?: number[];
 	basic?: boolean;
+	other: string[];
 }
 
 const IDENTIFIER_PARSER = P.oneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_')
@@ -42,21 +41,9 @@ const DC_PARSER: Parser<Pick<InlineCheck, 'dc'>> = P.sequenceMap(
 	P_UTILS.digits(),
 );
 
-const TRAITS_PARSER: Parser<Pick<InlineCheck, 'traits'>> = P.sequenceMap(
-	(_1, traits) => ({ traits }),
-	P.string('traits:').trim(P_UTILS.optionalWhitespace()),
-	P.separateBy(P.manyNotOf('|],'), P.string(',').trim(P_UTILS.optionalWhitespace())),
-);
-
 const DEFENSE_PARSER: Parser<Pick<InlineCheck, 'defense'>> = P.sequenceMap(
 	(_1, defense) => ({ defense }),
 	P.string('defense:').trim(P_UTILS.optionalWhitespace()),
-	IDENTIFIER_PARSER,
-);
-
-const AGAINST_PARSER: Parser<Pick<InlineCheck, 'against'>> = P.sequenceMap(
-	(_1, against) => ({ against }),
-	P.string('against:').trim(P_UTILS.optionalWhitespace()),
 	IDENTIFIER_PARSER,
 );
 
@@ -71,19 +58,25 @@ const ADJUSTMENT_PARSER: Parser<Pick<InlineCheck, 'adjustment'>> = P.sequenceMap
 	),
 );
 
+const OTHER_ATTR_PARSER: Parser<string> = P.manyNotOf('|]'); // Ignore unknown attributes
+
 const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 	(type, rest) => {
-		const res = { type, system: GameSystem.PF2E };
+		const res = { type, system: GameSystem.PF2E, other: [] as string[] } satisfies Partial<InlineCheck>;
 		for (const part of rest) {
-			Object.assign(res, part);
+			if (typeof part === 'string') {
+				res.other.push(part);
+			} else {
+				Object.assign(res, part);
+			}
 		}
 		return res as InlineCheck;
 	},
 	TYPE_PARSER.trim(P_UTILS.optionalWhitespace()),
 	P.sequenceMap(
 		(_sep, part) => part,
-		P.or(P.string('\\|'), P.string('|')).trim(P_UTILS.optionalWhitespace()),
-		P.or(DC_PARSER, TRAITS_PARSER, DEFENSE_PARSER, AGAINST_PARSER, ADJUSTMENT_PARSER, BASIC_PARSER),
+		P.string('|').trim(P_UTILS.optionalWhitespace()),
+		P.or(DC_PARSER, DEFENSE_PARSER, ADJUSTMENT_PARSER, BASIC_PARSER, OTHER_ATTR_PARSER),
 	).many(),
 );
 
@@ -160,19 +153,16 @@ export function formatInlineCheck(check: InlineCheck): string {
 
 	// Add defense if present
 	if (check.defense) {
-		const capitalizedDefense = check.defense.charAt(0).toUpperCase() + check.defense.slice(1).toLowerCase();
+		const lowercaseDefense = check.defense.toLowerCase();
+		let capitalizedDefense;
+
+		if (lowercaseDefense === 'ac') {
+			capitalizedDefense = 'AC';
+		} else {
+			capitalizedDefense = check.defense.charAt(0).toUpperCase() + lowercaseDefense.slice(1);
+		}
+
 		parts.push(`vs ${capitalizedDefense}`);
-	}
-
-	// Add against if present
-	if (check.against) {
-		parts.push(`against ${check.against}`);
-	}
-
-	// Add traits if present
-	if (check.traits && check.traits.length > 0) {
-		const traitsStr = check.traits.join(', ');
-		parts.push(`[${traitsStr}]`);
 	}
 
 	return parts.join(' ');
@@ -202,19 +192,9 @@ export function stringifyInlineCheck(check: InlineCheck): string {
 		parts.push(`dc:${check.dc}`);
 	}
 
-	// Add traits if present
-	if (check.traits && check.traits.length > 0) {
-		parts.push(`traits:${check.traits.join(',')}`);
-	}
-
 	// Add defense if present
 	if (check.defense) {
 		parts.push(`defense:${check.defense}`);
-	}
-
-	// Add against if present
-	if (check.against) {
-		parts.push(`against:${check.against}`);
 	}
 
 	// Add adjustment if present
@@ -227,6 +207,8 @@ export function stringifyInlineCheck(check: InlineCheck): string {
 	if (check.basic) {
 		parts.push('basic');
 	}
+
+	parts.push(...check.other);
 
 	return `@Check[${parts.join('|')}]`;
 }

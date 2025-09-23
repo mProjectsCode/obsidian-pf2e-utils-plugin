@@ -150,15 +150,25 @@ export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: numbe
 
 	const pf2eTypes = pf1eCheck.type.map((t, i) => [convertPf1eSkillToPf2eSkill(t), pf1eCheck.adjustment ? pf1eCheck.adjustment[i] : 0] as const);
 
-	const flatTypes = pf2eTypes.flatMap(t => t[0]);
-	const adjustments = pf2eTypes.flatMap(t => Array<number>(t[0].length).fill(t[1]));
+	// dedupe types, keeping the lowest adjustment
+	const typeMap = new Map<string, number>();
+	for (const [types, adj] of pf2eTypes) {
+		for (const type of types) {
+			if (!typeMap.has(type) || (typeMap.get(type) ?? 0) > adj) {
+				typeMap.set(type, adj);
+			}
+		}
+	}
+
+	const flatTypes = Array.from(typeMap.keys());
+	const adjustments = Array.from(typeMap.values());
 
 	return {
 		system: GameSystem.PF2E,
 		type: flatTypes,
 		dc: pf1eCheck.dc !== undefined ? convertPf1eToPf2eDC(level, pf1eCheck.dc) : undefined,
-		traits: pf1eCheck.traits,
 		adjustment: adjustments,
+		other: [],
 	};
 }
 

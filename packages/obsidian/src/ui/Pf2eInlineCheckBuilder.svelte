@@ -26,7 +26,7 @@
 
 	let dc: number | undefined | null = $state(prefillCheck?.dc ?? null);
 
-	let traits: string = $state('');
+	let other: string = $state('');
 
 	// defense and DC are mutually exclusive
 	let defense: string | undefined = $state(prefillCheck?.defense ?? undefined);
@@ -44,13 +44,13 @@
 			system: GameSystem.PF2E,
 			type: types.map(t => t.type),
 			adjustment: types.map(t => t.adjustment ?? 0),
-			traits: traits
-				.split(',')
-				.map(t => t.trim())
-				.filter(t => t.length > 0),
 			dc: dc ?? undefined,
 			defense: defense,
 			basic: basicEligible && basic,
+			other: other
+				.split('|')
+				.map(t => t.trim())
+				.filter(t => t.length > 0),
 		};
 	});
 
@@ -116,10 +116,6 @@
 		<input type="number" bind:value={dc} placeholder="DC" />
 	</SettingComponent>
 
-	<SettingComponent name="Traits" description="Optional traits for the check, comma separated.">
-		<input type="text" bind:value={traits} placeholder="Traits" />
-	</SettingComponent>
-
 	<SettingComponent name="Defense" description="The defense to check against (e.g. fortitude, perception, ...).">
 		<input type="text" bind:value={defense} placeholder="Defense" />
 	</SettingComponent>
@@ -129,6 +125,10 @@
 	</SettingComponent>
 
 	<SettingComponent heading={true} name="Preview"></SettingComponent>
+
+	<SettingComponent name="Other" description="Optional other attributes for the check, separated by '|'. E.g. 'traits:fire|showDC'">
+		<input type="text" bind:value={other} placeholder="Other" />
+	</SettingComponent>
 
 	{#if error}
 		<p class="mod-warning">{error}</p>

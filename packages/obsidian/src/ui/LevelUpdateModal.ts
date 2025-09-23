@@ -2,16 +2,16 @@ import type { TFile } from 'obsidian';
 import { Modal, Notice } from 'obsidian';
 import type Pf2eUtilsPlugin from 'packages/obsidian/src/main';
 
-export async function openLevelUpdateModal(plugin: Pf2eUtilsPlugin, file: TFile): Promise<number | undefined> {
+export async function openLevelUpdateModal(plugin: Pf2eUtilsPlugin, file: TFile): Promise<void> {
 	return new Promise(resolve => {
 		const modal = new LevelUpdateModal(
 			plugin,
 			file,
-			level => {
-				resolve(level);
+			() => {
+				resolve();
 			},
-			level => {
-				resolve(level);
+			() => {
+				resolve();
 			},
 		);
 		modal.open();
@@ -21,11 +21,11 @@ export async function openLevelUpdateModal(plugin: Pf2eUtilsPlugin, file: TFile)
 export class LevelUpdateModal extends Modal {
 	private readonly plugin: Pf2eUtilsPlugin;
 	private readonly file: TFile;
-	private readonly onSubmit: (level: number) => void;
-	private readonly onCancel: (level: number | undefined) => void;
+	private readonly onSubmit: () => void;
+	private readonly onCancel: () => void;
 	private returned: boolean = false;
 
-	constructor(plugin: Pf2eUtilsPlugin, file: TFile, onSubmit: (level: number) => void, onCancel: (level: number | undefined) => void) {
+	constructor(plugin: Pf2eUtilsPlugin, file: TFile, onSubmit: () => void, onCancel: () => void) {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.file = file;
@@ -67,7 +67,7 @@ export class LevelUpdateModal extends Modal {
 					(frontmatter as Record<string, unknown>).level = value;
 				});
 
-				this.onSubmit(value);
+				this.onSubmit();
 				this.returned = true;
 				this.close();
 			} else {
@@ -76,7 +76,7 @@ export class LevelUpdateModal extends Modal {
 		});
 
 		cancelButton.addEventListener('click', () => {
-			this.onCancel(this.plugin.getLevelFromFrontmatter(this.file));
+			this.onCancel();
 			this.returned = true;
 			this.close();
 		});
@@ -93,7 +93,7 @@ export class LevelUpdateModal extends Modal {
 	onClose(): void {
 		this.contentEl.empty();
 		if (!this.returned) {
-			this.onCancel(this.plugin.getLevelFromFrontmatter(this.file));
+			this.onCancel();
 		}
 	}
 }

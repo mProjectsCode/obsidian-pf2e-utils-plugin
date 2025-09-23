@@ -4,7 +4,7 @@ import { Pf1eSkills, Pf1eMiscSkills } from '../../packages/obsidian/src/rolls/Na
 
 describe('PF1e Scanner', () => {
 	describe('Single Word Skills', () => {
-		test('should find all basic single-word skills', () => {
+		describe('should find all basic single-word skills', () => {
 			const skills = [
 				{ text: 'DC 15 Acrobatics', skill: Pf1eSkills.Acrobatics },
 				{ text: 'DC 15 Appraise', skill: Pf1eSkills.Appraise },
@@ -27,7 +27,7 @@ describe('PF1e Scanner', () => {
 				{ text: 'DC 15 Swim', skill: Pf1eSkills.Swim },
 			];
 
-			skills.forEach(({ text, skill }) => {
+			test.each(skills)('$skill', ({ text, skill }) => {
 				const results = scanForPf1eChecks(`Try a ${text} check.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([skill]);
@@ -35,7 +35,7 @@ describe('PF1e Scanner', () => {
 			});
 		});
 
-		test('should find saves and misc abilities', () => {
+		describe('should find saves and misc abilities', () => {
 			const miscChecks = [
 				{ text: 'DC 15 Reflex', ability: Pf1eMiscSkills.Reflex },
 				{ text: 'DC 15 Fortitude', ability: Pf1eMiscSkills.Fortitude },
@@ -49,7 +49,7 @@ describe('PF1e Scanner', () => {
 				{ text: 'DC 15 Charisma', ability: Pf1eMiscSkills.Charisma },
 			];
 
-			miscChecks.forEach(({ text, ability }) => {
+			test.each(miscChecks)('$ability', ({ text, ability }) => {
 				const results = scanForPf1eChecks(`Make a ${text} save.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([ability]);
@@ -59,7 +59,7 @@ describe('PF1e Scanner', () => {
 	});
 
 	describe('Multi-word Skills', () => {
-		test('should find two-word skills', () => {
+		describe('should find two-word skills', () => {
 			const multiWordSkills = [
 				{ text: 'DC 20 Disable Device', skill: Pf1eSkills.DisableDevice },
 				{ text: 'DC 20 Escape Artist', skill: Pf1eSkills.EscapeArtist },
@@ -69,7 +69,7 @@ describe('PF1e Scanner', () => {
 				{ text: 'DC 20 Use Magic Device', skill: Pf1eSkills.UseMagicDevice },
 			];
 
-			multiWordSkills.forEach(({ text, skill }) => {
+			test.each(multiWordSkills)('$skill', ({ text, skill }) => {
 				const results = scanForPf1eChecks(`Attempt a ${text} check.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([skill]);
@@ -90,7 +90,7 @@ describe('PF1e Scanner', () => {
 	});
 
 	describe('Knowledge Skills', () => {
-		test('should find all Knowledge skills with parentheses', () => {
+		describe('should find all Knowledge skills with parentheses', () => {
 			const knowledgeSkills = [
 				{ text: 'Knowledge (arcana) DC 18', skill: Pf1eSkills.KnowledgeArcana },
 				{ text: 'Knowledge (dungeoneering) DC 18', skill: Pf1eSkills.KnowledgeDungeoneering },
@@ -104,7 +104,7 @@ describe('PF1e Scanner', () => {
 				{ text: 'Knowledge (religion) DC 18', skill: Pf1eSkills.KnowledgeReligion },
 			];
 
-			knowledgeSkills.forEach(({ text, skill }) => {
+			test.each(knowledgeSkills)('$skill', ({ text, skill }) => {
 				const results = scanForPf1eChecks(`Make a ${text} check.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([skill]);
@@ -113,10 +113,10 @@ describe('PF1e Scanner', () => {
 			});
 		});
 
-		test('should handle Knowledge skills with different capitalizations', () => {
+		describe('should handle Knowledge skills with different capitalizations', () => {
 			const variations = ['knowledge (arcana) dc 15', 'KNOWLEDGE (ARCANA) DC 15', 'Knowledge (Arcana) DC 15', 'knowledge (ARCANA) dc 15'];
 
-			variations.forEach(input => {
+			test.each(variations)('$input', input => {
 				const results = scanForPf1eChecks(input);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([Pf1eSkills.KnowledgeArcana]);
@@ -136,7 +136,7 @@ describe('PF1e Scanner', () => {
 	});
 
 	describe('Case Sensitivity', () => {
-		test('should handle mixed case in regular skills', () => {
+		describe('should handle mixed case in regular skills', () => {
 			const variations = [
 				{ input: 'dc 15 diplomacy', expected: 'dc 15 diplomacy' },
 				{ input: 'DC 15 DIPLOMACY', expected: 'DC 15 DIPLOMACY' },
@@ -144,7 +144,7 @@ describe('PF1e Scanner', () => {
 				{ input: 'DC 15 diplomacy', expected: 'DC 15 diplomacy' },
 			];
 
-			variations.forEach(({ input, expected }) => {
+			test.each(variations)('$input', ({ input, expected }) => {
 				const results = scanForPf1eChecks(input);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([Pf1eSkills.Diplomacy]);
@@ -153,10 +153,10 @@ describe('PF1e Scanner', () => {
 			});
 		});
 
-		test('should handle mixed case in multi-word skills', () => {
+		describe('should handle mixed case in multi-word skills', () => {
 			const variations = ['disable device dc 20', 'DISABLE DEVICE DC 20', 'Disable Device DC 20', 'DISABLE device DC 20'];
 
-			variations.forEach(input => {
+			test.each(variations)('$input', input => {
 				const results = scanForPf1eChecks(input);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([Pf1eSkills.DisableDevice]);
@@ -175,11 +175,11 @@ describe('PF1e Scanner', () => {
 			expect(results[0].check.dc).toBe(15);
 		});
 
-		test('should handle skills with extra descriptive text', () => {
+		describe('should handle skills with extra descriptive text', () => {
 			// these should match, but only the skill and DC should be captured, no extra text
 			const inputs = ['DC 15 Diplomacy (fast talk)', 'DC 15 Craft (weaponsmithing)', 'DC 15 Perform (comedy)'];
 
-			inputs.forEach(input => {
+			test.each(inputs)('$input', input => {
 				const results = scanForPf1eChecks(input);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.dc).toBe(15);

@@ -1,5 +1,5 @@
 ---
-level: 2
+level: 3
 ---
 
 You need to roll a `@Check[fortitude|dc:20]` saving throw

@@ -13,10 +13,9 @@ describe('Inline Check Parser', () => {
 				expect(check.type).toEqual(['fortitude']);
 				expect(check.dc).toBe(20);
 				expect(check.basic).toBe(true);
-				expect(check.traits).toBeUndefined();
 				expect(check.defense).toBeUndefined();
-				expect(check.against).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual([]);
 			}
 		});
 
@@ -29,11 +28,10 @@ describe('Inline Check Parser', () => {
 				const check: InlineCheck = result.value;
 				expect(check.type).toEqual(['athletics']);
 				expect(check.dc).toBe(20);
-				expect(check.traits).toEqual(['action:long-jump']);
 				expect(check.basic).toBeUndefined();
 				expect(check.defense).toBeUndefined();
-				expect(check.against).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual(['traits:action:long-jump']);
 			}
 		});
 
@@ -47,10 +45,9 @@ describe('Inline Check Parser', () => {
 				expect(check.type).toEqual(['flat']);
 				expect(check.dc).toBe(4);
 				expect(check.basic).toBeUndefined();
-				expect(check.traits).toBeUndefined();
 				expect(check.defense).toBeUndefined();
-				expect(check.against).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual([]);
 			}
 		});
 
@@ -64,10 +61,9 @@ describe('Inline Check Parser', () => {
 				expect(check.type).toEqual(['arcane', 'occultism']);
 				expect(check.dc).toBe(20);
 				expect(check.basic).toBeUndefined();
-				expect(check.traits).toBeUndefined();
 				expect(check.defense).toBeUndefined();
-				expect(check.against).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual([]);
 			}
 		});
 
@@ -82,9 +78,8 @@ describe('Inline Check Parser', () => {
 				expect(check.dc).toBe(20);
 				expect(check.adjustment).toEqual([0, -2]);
 				expect(check.basic).toBeUndefined();
-				expect(check.traits).toBeUndefined();
 				expect(check.defense).toBeUndefined();
-				expect(check.against).toBeUndefined();
+				expect(check.other).toEqual([]);
 			}
 		});
 
@@ -99,9 +94,8 @@ describe('Inline Check Parser', () => {
 				expect(check.defense).toBe('perception');
 				expect(check.dc).toBeUndefined();
 				expect(check.basic).toBeUndefined();
-				expect(check.traits).toBeUndefined();
-				expect(check.against).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual([]);
 			}
 		});
 
@@ -113,12 +107,11 @@ describe('Inline Check Parser', () => {
 			if (result.success) {
 				const check: InlineCheck = result.value;
 				expect(check.type).toEqual(['reflex']);
-				expect(check.against).toBe('class-spell');
 				expect(check.basic).toBe(true);
 				expect(check.dc).toBeUndefined();
-				expect(check.traits).toBeUndefined();
 				expect(check.defense).toBeUndefined();
 				expect(check.adjustment).toBeUndefined();
+				expect(check.other).toEqual(['against:class-spell']);
 			}
 		});
 	});
@@ -133,11 +126,10 @@ describe('Inline Check Parser', () => {
 				const check: InlineCheck = result.value;
 				expect(check.type).toEqual(['athletics', 'acrobatics']);
 				expect(check.dc).toBe(15);
-				expect(check.traits).toEqual(['action:climb']);
 				expect(check.defense).toBe('ac');
-				expect(check.against).toBe('spell');
 				expect(check.adjustment).toEqual([2, -1]);
 				expect(check.basic).toBe(true);
+				expect(check.other).toEqual(['traits:action:climb', 'against:spell']);
 			}
 		});
 
@@ -163,7 +155,7 @@ describe('Inline Check Parser', () => {
 				const check: InlineCheck = result.value;
 				expect(check.type).toEqual(['medicine']);
 				expect(check.dc).toBe(25);
-				expect(check.traits).toEqual(['action:treat-wounds:expert']);
+				expect(check.other).toEqual(['traits:action:treat-wounds:expert']);
 			}
 		});
 	});
@@ -253,18 +245,28 @@ describe('Inline Check Parser', () => {
 			expect(result.success).toBe(false);
 		});
 
-		test('should fail on invalid DC format', () => {
+		test('should fail to parse DC on invalid DC format', () => {
 			const input = '@Check[fortitude|dc:abc]';
 			const result = INLINE_CHECK_PARSER.tryParse(input);
 
-			expect(result.success).toBe(false);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.value.dc).toBeUndefined();
+				expect(result.value.type).toEqual(['fortitude']);
+				expect(result.value.other).toEqual(['dc:abc']);
+			}
 		});
 
-		test('should fail on missing colon in DC', () => {
+		test('should fail to parse DC on missing colon in DC', () => {
 			const input = '@Check[fortitude|dc20]';
 			const result = INLINE_CHECK_PARSER.tryParse(input);
 
-			expect(result.success).toBe(false);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.value.dc).toBeUndefined();
+				expect(result.value.type).toEqual(['fortitude']);
+				expect(result.value.other).toEqual(['dc20']);
+			}
 		});
 
 		test('should fail on invalid adjustment format', () => {
@@ -286,7 +288,7 @@ describe('Inline Check Parser', () => {
 				expect(check.type).toEqual(['athletics']);
 				expect(check.dc).toBe(20);
 				expect(check.basic).toBe(true);
-				expect(check.traits).toEqual(['action']);
+				expect(check.other).toEqual(['traits:action']);
 			}
 		});
 
@@ -310,28 +312,28 @@ describe('stringifyInlineCheck', () => {
 		test.each([
 			{
 				description: 'basic fortitude check with DC',
-				check: { type: ['fortitude'], dc: 20, basic: true, system: GameSystem.PF2E },
+				check: { type: ['fortitude'], system: GameSystem.PF2E, other: [], dc: 20, basic: true },
 				expected: '@Check[fortitude|dc:20|basic]',
 			},
 			{
 				description: 'flat check with DC only',
-				check: { type: ['flat'], dc: 4, system: GameSystem.PF2E },
+				check: { type: ['flat'], system: GameSystem.PF2E, other: [], dc: 4 },
 				expected: '@Check[flat|dc:4]',
 			},
 			{
 				description: 'athletics check with DC and traits',
-				check: { type: ['athletics'], dc: 20, traits: ['action:long-jump'], system: GameSystem.PF2E },
+				check: { type: ['athletics'], system: GameSystem.PF2E, other: ['traits:action:long-jump'], dc: 20 },
 				expected: '@Check[athletics|dc:20|traits:action:long-jump]',
 			},
 			{
 				description: 'deception check with defense parameter',
-				check: { type: ['deception'], defense: 'perception', system: GameSystem.PF2E },
+				check: { type: ['deception'], system: GameSystem.PF2E, other: [], defense: 'perception' },
 				expected: '@Check[deception|defense:perception]',
 			},
 			{
 				description: 'reflex check with against parameter and basic flag',
-				check: { type: ['reflex'], against: 'class-spell', basic: true, system: GameSystem.PF2E },
-				expected: '@Check[reflex|against:class-spell|basic]',
+				check: { type: ['reflex'], system: GameSystem.PF2E, other: ['against:class-spell'], basic: true },
+				expected: '@Check[reflex|basic|against:class-spell]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
 			expect(stringifyInlineCheck(check)).toBe(expected);
@@ -342,27 +344,26 @@ describe('stringifyInlineCheck', () => {
 		test.each([
 			{
 				description: 'multiple skill types with DC',
-				check: { type: ['arcane', 'occultism'], dc: 20, system: GameSystem.PF2E },
+				check: { type: ['arcane', 'occultism'], system: GameSystem.PF2E, other: [], dc: 20 },
 				expected: '@Check[arcane,occultism|dc:20]',
 			},
 			{
 				description: 'multiple skills with DC and adjustments',
-				check: { type: ['crafting', 'thievery'], dc: 20, adjustment: [0, -2], system: GameSystem.PF2E },
+				check: { type: ['crafting', 'thievery'], system: GameSystem.PF2E, other: [], dc: 20, adjustment: [0, -2] },
 				expected: '@Check[crafting,thievery|dc:20|adjustment:0,-2]',
 			},
 			{
 				description: 'check with all parameters',
 				check: {
 					type: ['athletics', 'acrobatics'],
+					system: GameSystem.PF2E,
 					dc: 15,
-					traits: ['action:climb'],
 					defense: 'ac',
-					against: 'spell',
 					adjustment: [2, -1],
 					basic: true,
-					system: GameSystem.PF2E,
+					other: ['traits:action:climb', 'against:spell'],
 				},
-				expected: '@Check[athletics,acrobatics|dc:15|traits:action:climb|defense:ac|against:spell|adjustment:2,-1|basic]',
+				expected: '@Check[athletics,acrobatics|dc:15|defense:ac|adjustment:2,-1|basic|traits:action:climb|against:spell]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
 			expect(stringifyInlineCheck(check)).toBe(expected);
@@ -373,32 +374,32 @@ describe('stringifyInlineCheck', () => {
 		test.each([
 			{
 				description: 'check with positive and negative adjustments',
-				check: { type: ['stealth'], dc: 18, adjustment: [5, -3, 0, 2], system: GameSystem.PF2E },
+				check: { type: ['stealth'], system: GameSystem.PF2E, other: [], dc: 18, adjustment: [5, -3, 0, 2] },
 				expected: '@Check[stealth|dc:18|adjustment:5,-3,0,2]',
 			},
 			{
 				description: 'check with positive adjustment only',
-				check: { type: ['perception'], adjustment: [10], system: GameSystem.PF2E },
+				check: { type: ['perception'], system: GameSystem.PF2E, other: [], adjustment: [10] },
 				expected: '@Check[perception|adjustment:10]',
 			},
 			{
 				description: 'check with negative adjustment only',
-				check: { type: ['medicine'], adjustment: [-5], system: GameSystem.PF2E },
+				check: { type: ['medicine'], system: GameSystem.PF2E, other: [], adjustment: [-5] },
 				expected: '@Check[medicine|adjustment:-5]',
 			},
 			{
 				description: 'check with zero adjustment',
-				check: { type: ['diplomacy'], adjustment: [0], system: GameSystem.PF2E },
+				check: { type: ['diplomacy'], system: GameSystem.PF2E, other: [], adjustment: [0] },
 				expected: '@Check[diplomacy]',
 			},
 			{
 				description: 'check with multiple zero adjustments',
-				check: { type: ['diplomacy', 'deception'], adjustment: [0, 0], system: GameSystem.PF2E },
+				check: { type: ['diplomacy', 'deception'], system: GameSystem.PF2E, other: [], adjustment: [0, 0] },
 				expected: '@Check[diplomacy,deception]',
 			},
 			{
 				description: 'check with multiple adjustments',
-				check: { type: ['diplomacy', 'deception'], adjustment: [0, -2], system: GameSystem.PF2E },
+				check: { type: ['diplomacy', 'deception'], system: GameSystem.PF2E, other: [], adjustment: [0, -2] },
 				expected: '@Check[diplomacy,deception|adjustment:0,-2]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
@@ -410,18 +411,18 @@ describe('stringifyInlineCheck', () => {
 		test.each([
 			{
 				description: 'check with complex traits',
-				check: { type: ['medicine'], dc: 25, traits: ['action:treat-wounds:expert'], system: GameSystem.PF2E },
+				check: { type: ['medicine'], system: GameSystem.PF2E, other: ['traits:action:treat-wounds:expert'], dc: 25 },
 				expected: '@Check[medicine|dc:25|traits:action:treat-wounds:expert]',
 			},
 			{
 				description: 'check with multiple traits',
-				check: { type: ['survival'], traits: ['exploration', 'downtime'], system: GameSystem.PF2E },
+				check: { type: ['survival'], system: GameSystem.PF2E, other: ['traits:exploration,downtime'] },
 				expected: '@Check[survival|traits:exploration,downtime]',
 			},
 			{
 				description: 'check with multiple traits and other parameters',
-				check: { type: ['intimidation'], dc: 15, traits: ['emotion', 'fear', 'mental'], basic: true, system: GameSystem.PF2E },
-				expected: '@Check[intimidation|dc:15|traits:emotion,fear,mental|basic]',
+				check: { type: ['intimidation'], system: GameSystem.PF2E, other: ['traits:emotion,fear,mental'], dc: 15, basic: true },
+				expected: '@Check[intimidation|dc:15|basic|traits:emotion,fear,mental]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
 			expect(stringifyInlineCheck(check)).toBe(expected);
@@ -432,17 +433,17 @@ describe('stringifyInlineCheck', () => {
 		test.each([
 			{
 				description: 'check with only skill type',
-				check: { type: ['perception'], system: GameSystem.PF2E },
+				check: { type: ['perception'], system: GameSystem.PF2E, other: [] },
 				expected: '@Check[perception]',
 			},
 			{
 				description: 'check with single character skill name',
-				check: { type: ['a'], system: GameSystem.PF2E },
+				check: { type: ['a'], system: GameSystem.PF2E, other: [] },
 				expected: '@Check[a]',
 			},
 			{
 				description: 'check with hyphenated skill name',
-				check: { type: ['skill-with-hyphens'], system: GameSystem.PF2E },
+				check: { type: ['skill-with-hyphens'], system: GameSystem.PF2E, other: [] },
 				expected: '@Check[skill-with-hyphens]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
@@ -458,8 +459,8 @@ describe('stringifyInlineCheck', () => {
 			'@Check[arcane,occultism|dc:20]',
 			'@Check[crafting,thievery|dc:20|adjustment:0,-2]',
 			'@Check[deception|defense:perception]',
-			'@Check[reflex|against:class-spell|basic]',
-			'@Check[athletics,acrobatics|dc:15|traits:action:climb|defense:ac|against:spell|adjustment:2,-1|basic]',
+			'@Check[reflex|basic|against:class-spell]',
+			'@Check[athletics,acrobatics|dc:15|defense:ac|adjustment:2,-1|basic|traits:action:climb|against:spell]',
 			'@Check[stealth|dc:18|adjustment:5,-3,0,2]',
 			'@Check[medicine|dc:25|traits:action:treat-wounds:expert]',
 			'@Check[perception]',

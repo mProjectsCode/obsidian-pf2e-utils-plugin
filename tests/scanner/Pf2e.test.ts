@@ -30,23 +30,7 @@ describe('PF2e Scanner', () => {
 	});
 
 	describe('PF2e-Specific Skills', () => {
-		test('should find PF2e skills that differ from PF1e', () => {
-			const pf2eSpecificChecks = [
-				{ text: 'DC 15 Deception', skill: Pf2eSkills.Deception },
-				{ text: 'DC 15 Thievery', skill: Pf2eSkills.Thievery },
-				{ text: 'DC 15 Society', skill: Pf2eSkills.Society },
-				{ text: 'DC 15 Occultism', skill: Pf2eSkills.Occultism },
-			];
-
-			pf2eSpecificChecks.forEach(({ text, skill }) => {
-				const results = scanForPf2eChecks(`Try a ${text} check.`);
-				expect(results).toHaveLength(1);
-				expect(results[0].check.type).toEqual([skill]);
-				expect(results[0].check.dc).toBe(15);
-			});
-		});
-
-		test('should find all PF2e skills', () => {
+		describe('should find all PF2e skills', () => {
 			const allSkills = [
 				{ text: 'DC 15 Acrobatics', skill: Pf2eSkills.Acrobatics },
 				{ text: 'DC 15 Arcana', skill: Pf2eSkills.Arcana },
@@ -66,7 +50,7 @@ describe('PF2e Scanner', () => {
 				{ text: 'DC 15 Thievery', skill: Pf2eSkills.Thievery },
 			];
 
-			allSkills.forEach(({ text, skill }) => {
+			test.each(allSkills)('$skill', ({ text, skill }) => {
 				const results = scanForPf2eChecks(`Attempt a ${text} check.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([skill]);
@@ -74,7 +58,7 @@ describe('PF2e Scanner', () => {
 			});
 		});
 
-		test('should find saves and perception', () => {
+		describe('should find saves and perception', () => {
 			const savesAndPerception = [
 				{ text: 'DC 15 Reflex', ability: Pf2eMiscSkills.Reflex },
 				{ text: 'DC 15 Fortitude', ability: Pf2eMiscSkills.Fortitude },
@@ -82,7 +66,7 @@ describe('PF2e Scanner', () => {
 				{ text: 'DC 15 Perception', ability: Pf2eMiscSkills.Perception },
 			];
 
-			savesAndPerception.forEach(({ text, ability }) => {
+			test.each(savesAndPerception)('$ability', ({ text, ability }) => {
 				const results = scanForPf2eChecks(`Make a ${text} save.`);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([ability]);
@@ -135,10 +119,10 @@ describe('PF2e Scanner', () => {
 	});
 
 	describe('Case Sensitivity and Formatting', () => {
-		test('should handle various capitalizations', () => {
+		describe('should handle various capitalizations', () => {
 			const variations = ['dc 15 athletics', 'DC 15 ATHLETICS', 'Dc 15 Athletics', 'DC 15 athletics'];
 
-			variations.forEach(input => {
+			test.each(variations)('$input', input => {
 				const results = scanForPf2eChecks(input);
 				expect(results).toHaveLength(1);
 				expect(results[0].check.type).toEqual([Pf2eSkills.Athletics]);
@@ -166,7 +150,7 @@ describe('PF2e Scanner', () => {
 			expect(results[0].check.dc).toBe(15);
 		});
 
-		test('should handle skills with extra descriptive text', () => {
+		describe('should handle skills with extra descriptive text', () => {
 			// these should match, but only the skill and DC should be captured, no extra text
 			const inputs = ['DC 15 Diplomacy (fast talk)', 'DC 15 Lore (weaponsmithing)', 'DC 15 Performance (comedy)'];
 

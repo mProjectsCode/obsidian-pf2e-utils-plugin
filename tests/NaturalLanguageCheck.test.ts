@@ -11,9 +11,7 @@ describe('PF1e Natural Language Check Parser', () => {
 				expect(result.type).toEqual([Pf1eSkills.Diplomacy]);
 				expect(result.dc).toBe(15);
 				expect(result.basic).toBeUndefined();
-				expect(result.traits).toBeUndefined();
 				expect(result.defense).toBeUndefined();
-				expect(result.against).toBeUndefined();
 				expect(result.adjustment).toBeUndefined();
 			}
 		});
@@ -26,9 +24,7 @@ describe('PF1e Natural Language Check Parser', () => {
 				expect(result.type).toEqual([Pf1eSkills.Intimidate]);
 				expect(result.dc).toBe(9);
 				expect(result.basic).toBeUndefined();
-				expect(result.traits).toBeUndefined();
 				expect(result.defense).toBeUndefined();
-				expect(result.against).toBeUndefined();
 				expect(result.adjustment).toBeUndefined();
 			}
 		});
@@ -292,9 +288,7 @@ describe('PF2e Natural Language Check Parser', () => {
 				expect(result.type).toEqual([Pf2eSkills.Deception]);
 				expect(result.dc).toBe(15);
 				expect(result.basic).toBeUndefined();
-				expect(result.traits).toBeUndefined();
 				expect(result.defense).toBeUndefined();
-				expect(result.against).toBeUndefined();
 				expect(result.adjustment).toBeUndefined();
 			}
 		});
@@ -307,9 +301,7 @@ describe('PF2e Natural Language Check Parser', () => {
 				expect(result.type).toEqual([Pf2eSkills.Athletics]);
 				expect(result.dc).toBe(20);
 				expect(result.basic).toBeUndefined();
-				expect(result.traits).toBeUndefined();
 				expect(result.defense).toBeUndefined();
-				expect(result.against).toBeUndefined();
 				expect(result.adjustment).toBeUndefined();
 			}
 		});
