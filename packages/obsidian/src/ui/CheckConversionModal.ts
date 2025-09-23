@@ -53,7 +53,7 @@ export class CheckConversionModal extends Modal {
 
 		const builderEl = this.contentEl.createDiv();
 
-		const pf2eCheck = convertPf1eCheckToPf2eCheck(this.check, this.level);
+		const pf2eCheck = convertPf1eCheckToPf2eCheck(this.check, this.level, this.plugin.settings.skillConversionIgnoreLore);
 
 		this.svelteComponent = mount(Pf2eInlineCheckBuilder, {
 			target: builderEl,

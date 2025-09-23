@@ -124,11 +124,11 @@
 		<input type="checkbox" bind:checked={basic} />
 	</SettingComponent>
 
-	<SettingComponent heading={true} name="Preview"></SettingComponent>
-
 	<SettingComponent name="Other" description="Optional other attributes for the check, separated by '|'. E.g. 'traits:fire|showDC'">
 		<input type="text" bind:value={other} placeholder="Other" />
 	</SettingComponent>
+
+	<SettingComponent heading={true} name="Preview"></SettingComponent>
 
 	{#if error}
 		<p class="mod-warning">{error}</p>

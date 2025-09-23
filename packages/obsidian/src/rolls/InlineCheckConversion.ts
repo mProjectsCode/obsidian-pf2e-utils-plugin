@@ -35,7 +35,7 @@
 import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
 import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 import type { Pf1eMiscSkills, Pf1eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
-import { PF1E_TO_PF2E_SKILL_MAP } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import { PF1E_TO_PF2E_SKILL_MAP, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 interface DCTableEntry {
 	// the starting PF1e DC
@@ -140,7 +140,7 @@ export function convertPf1eSkillToPf2eSkill(pf1eSkill: string): string[] {
 	return PF1E_TO_PF2E_SKILL_MAP[pf1eSkill as Pf1eSkills | Pf1eMiscSkills] || [pf1eSkill];
 }
 
-export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: number): InlineCheck {
+export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: number, excludeLore: boolean): InlineCheck {
 	if (pf1eCheck.system !== GameSystem.PF1E) {
 		throw new Error('Can only convert pf1e checks to pf2e checks');
 	}
@@ -158,6 +158,10 @@ export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: numbe
 				typeMap.set(type, adj);
 			}
 		}
+	}
+
+	if (excludeLore) {
+		typeMap.delete(Pf2eSkills.Lore);
 	}
 
 	const flatTypes = Array.from(typeMap.keys());

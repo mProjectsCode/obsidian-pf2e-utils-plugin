@@ -15,16 +15,13 @@ export class SampleSettingTab extends PluginSettingTab {
 		this.containerEl.empty();
 
 		new Setting(this.containerEl)
-			.setName('Setting #1')
-			.setDesc("It's a secret")
-			.addText(text =>
-				text
-					.setPlaceholder('Enter your secret')
-					.setValue(this.plugin.settings.mySetting)
-					.onChange(async value => {
-						this.plugin.settings.mySetting = value;
-						await this.plugin.saveSettings();
-					}),
+			.setName('Skill conversion ignore lore')
+			.setDesc("When converting PF1E checks to PF2E, don't include lore.")
+			.addToggle(toggle =>
+				toggle.setValue(this.plugin.settings.skillConversionIgnoreLore).onChange(async value => {
+					this.plugin.settings.skillConversionIgnoreLore = value;
+					await this.plugin.saveSettings();
+				}),
 			);
 	}
 }

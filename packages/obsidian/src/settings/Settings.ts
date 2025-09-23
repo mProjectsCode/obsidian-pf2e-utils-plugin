@@ -1,7 +1,7 @@
-export interface MyPluginSettings {
-	mySetting: string;
+export interface Pf2eUtilsSettings {
+	skillConversionIgnoreLore: boolean;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default',
+export const DEFAULT_SETTINGS: Pf2eUtilsSettings = {
+	skillConversionIgnoreLore: false,
 };

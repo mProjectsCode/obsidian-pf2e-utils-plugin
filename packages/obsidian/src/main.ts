@@ -3,7 +3,7 @@ import { Notice, Plugin } from 'obsidian';
 import { InlineCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
 import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguageCheckFinder';
 import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
-import type { MyPluginSettings } from 'packages/obsidian/src/settings/Settings';
+import type { Pf2eUtilsSettings } from 'packages/obsidian/src/settings/Settings';
 import { DEFAULT_SETTINGS } from 'packages/obsidian/src/settings/Settings';
 import { SampleSettingTab } from 'packages/obsidian/src/settings/SettingTab';
 import { CheckFinderView } from 'packages/obsidian/src/ui/CheckFinderView';
@@ -12,7 +12,7 @@ const VIEW_TYPE_CHECK_FINDER_PF2E = 'pf2e-utils-check-finder-pf2e';
 const VIEW_TYPE_CHECK_FINDER_PF1E = 'pf2e-utils-check-finder-pf1e';
 
 export default class Pf2eUtilsPlugin extends Plugin {
-	settings!: MyPluginSettings;
+	settings!: Pf2eUtilsSettings;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -78,7 +78,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 	onunload(): void {}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as MyPluginSettings;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as Pf2eUtilsSettings;
 	}
 
 	async saveSettings(): Promise<void> {
