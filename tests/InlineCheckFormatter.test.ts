@@ -32,6 +32,18 @@ describe('InlineCheck Formatter', () => {
 			expect(result).toBe('DC 20 Arcane or Occultism');
 		});
 
+		test('should format check single adjustment', () => {
+			const check: InlineCheck = {
+				type: ['thievery'],
+				system: GameSystem.PF2E,
+				other: [],
+				dc: 20,
+				adjustment: [-2],
+			};
+			const result = formatInlineCheck(check);
+			expect(result).toBe('DC 20 Thievery (-2)');
+		});
+
 		test('should format check with adjustments', () => {
 			const check: InlineCheck = {
 				type: ['crafting', 'thievery'],

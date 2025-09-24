@@ -1,3 +1,6 @@
 [test]
-preload = ["./tests/svelteLoader.ts", "./tests/happydom.ts", "./tests/obsidianMock.ts"]
+preload = ["./tests/__preload__/svelteLoader.ts", "./tests/__preload__/happydom.ts", "./tests/__preload__/obsidianMock.ts"]
 root = "./tests"
+coverage = true
+coverageReporter = ["text"]
+coveragePathIgnorePatterns = ["tests/__preload__/*"]
