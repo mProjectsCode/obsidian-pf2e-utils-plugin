@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { convertPf1eToPf2eDC, pf2eLevelBasedDC } from '../../packages/obsidian/src/rolls/InlineCheckConversion';
+import { convertPf1eToPf2eDC, pf2eLevelBasedDC } from '../../packages/obsidian/src/rolls/CheckConversion';
 
 describe('PF1e to PF2e Conversion Table Validation', () => {
 	describe('Table Data Integrity', () => {

@@ -1,11 +1,21 @@
 <script lang="ts">
-	import { formatInlineCheck, GameSystem, stringifyInlineCheck, type InlineCheck } from '../rolls/InlineCheck';
-	import { getPf2eCheckClassification, pf2eLevelBasedDC } from '../rolls/InlineCheckConversion';
-	import { ALL_PF2E_SKILLS, Pf2eMiscSkills } from '../rolls/NaturalLanguageCheck';
+	import { formatPf2eCheck, stringifyInlineCheck, type Pf2eCheck } from '../rolls/Pf2eCheck';
+	import { getPf2eCheckClassification, pf2eLevelBasedDC } from '../rolls/CheckConversion';
+	import { ALL_PF2E_SKILLS, Pf2eMiscSkills, Pf2eSkills } from '../rolls/NaturalLanguageCheck';
 	import { ButtonStyleType } from '../utils/misc';
 	import Button from './common/Button.svelte';
 	import FlexRow from './common/FlexRow.svelte';
 	import SettingComponent from './common/SettingComponent.svelte';
+
+	interface CheckTypeOption {
+		type: Pf2eSkills | Pf2eMiscSkills | undefined | null;
+		adjustment: number | undefined | null;
+	}
+
+	interface FullCheckTypeOption {
+		type: Pf2eSkills | Pf2eMiscSkills;
+		adjustment: number | undefined | null;
+	}
 
 	const {
 		onCancel,
@@ -14,15 +24,22 @@
 		level,
 	}: {
 		onCancel: () => void;
-		onSubmit: (check: InlineCheck) => void;
-		prefillCheck?: InlineCheck | undefined;
+		onSubmit: (check: Pf2eCheck) => void;
+		prefillCheck?: Pf2eCheck | undefined;
 		level: number;
 	} = $props();
 
-	let types: {
-		type: string;
-		adjustment: number | undefined;
-	}[] = $state(prefillCheck?.type.map((t, i) => ({ type: t, adjustment: prefillCheck?.adjustment?.[i] ?? 0 })) ?? [{ type: '', adjustment: 0 }]);
+	let types: CheckTypeOption[] = $state(
+		prefillCheck?.type.map((t, i) => ({
+			type: t,
+			adjustment: prefillCheck?.adjustment?.[i] ?? 0,
+		})) ?? [
+			{
+				type: undefined,
+				adjustment: 0,
+			},
+		],
+	);
 
 	let dc: number | undefined | null = $state(prefillCheck?.dc ?? null);
 
@@ -33,17 +50,20 @@
 
 	let basic: boolean = $state(true);
 
-	let check: InlineCheck | undefined = $derived.by(() => {
+	let check: Pf2eCheck | undefined = $derived.by(() => {
 		if (error) {
 			return undefined;
 		}
 
-		const basicEligible = types.some(t => t.type === Pf2eMiscSkills.Fortitude || t.type === Pf2eMiscSkills.Reflex || t.type === Pf2eMiscSkills.Will);
+		const filteredTypes = types.filter(t => t.type != null) as FullCheckTypeOption[];
+
+		const basicEligible = filteredTypes.some(
+			t => t.type === Pf2eMiscSkills.Fortitude || t.type === Pf2eMiscSkills.Reflex || t.type === Pf2eMiscSkills.Will,
+		);
 
 		return {
-			system: GameSystem.PF2E,
-			type: types.map(t => t.type),
-			adjustment: types.map(t => t.adjustment ?? 0),
+			type: filteredTypes.map(t => t.type),
+			adjustment: filteredTypes.map(t => t.adjustment ?? 0),
 			dc: dc ?? undefined,
 			defense: defense,
 			basic: basicEligible && basic,
@@ -58,7 +78,7 @@
 		if (types.length === 0) {
 			return 'At least one check type is required';
 		}
-		if (types.some(t => t.type.trim().length === 0)) {
+		if (types.some(t => t.type == null)) {
 			return 'All check types must be filled out';
 		}
 		if (types.some(t => t.adjustment && isNaN(t.adjustment))) {
@@ -107,7 +127,7 @@
 		<Button
 			variant={ButtonStyleType.PRIMARY}
 			onclick={() => {
-				types.push({ type: '', adjustment: 0 });
+				types.push({ type: undefined, adjustment: 0 });
 			}}>Add Check Type</Button
 		>
 	</div>
@@ -134,7 +154,7 @@
 		<p class="mod-warning">{error}</p>
 	{:else if check}
 		<p>{stringifyInlineCheck(check)}</p>
-		<p>{formatInlineCheck(check)}</p>
+		<p>{formatPf2eCheck(check)}</p>
 		<p>{getPf2eCheckClassification(check, level)}</p>
 	{:else}
 		<p class="mod-warning">Check is invalid</p>

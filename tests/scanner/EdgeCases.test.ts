@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { scanForNaturalLanguageChecks, scanForPf1eChecks, scanForPf2eChecks } from '../../packages/obsidian/src/rolls/NaturalLanguageCheckScanner';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
+import { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
 
 describe('Scanner - Shared Tests (Both PF1e and PF2e)', () => {
 	describe('Edge Cases and Boundary Conditions', () => {

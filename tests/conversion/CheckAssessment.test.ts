@@ -6,8 +6,8 @@ import {
 	pf2eCheckDifficulty,
 	pf2eLevelBasedDC,
 	getPf2eCheckClassification,
-} from '../../packages/obsidian/src/rolls/InlineCheckConversion';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
+} from '../../packages/obsidian/src/rolls/CheckConversion';
+import { Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 describe('PF2e Check Assessment', () => {
 	describe('Proficiency Requirements Analysis', () => {
@@ -119,49 +119,69 @@ describe('PF2e Check Assessment', () => {
 			];
 
 			test.each(classifications)('level: $level, dc: $dc', ({ level, dc, expected }) => {
-				expect(getPf2eCheckClassification({
-					system: GameSystem.PF2E,
-					type: ['Athletics'],
-					dc,
-					other: []
-				}, level)).toBe(expected);
+				expect(
+					getPf2eCheckClassification(
+						{
+							type: [Pf2eSkills.Athletics],
+							dc,
+							other: [],
+						},
+						level,
+					),
+				).toBe(expected);
 			});
 		});
 
 		describe('should handle edge cases in classification', () => {
 			test('minimum level and DC', () => {
-				expect(getPf2eCheckClassification({
-					system: GameSystem.PF2E,
-					type: ['Athletics'],
-					dc: 1,
-					other: []
-				}, 1)).toBe('Incredibly easy (-14); Untrained');
+				expect(
+					getPf2eCheckClassification(
+						{
+							type: [Pf2eSkills.Athletics],
+							dc: 1,
+							other: [],
+						},
+						1,
+					),
+				).toBe('Incredibly easy (-14); Untrained');
 			});
 
 			test('maximum level and DC', () => {
-				expect(getPf2eCheckClassification({
-					system: GameSystem.PF2E,
-					type: ['Athletics'],
-					dc: 50,
-					other: []
-				}, 20)).toBe('Incredibly hard (+10); Legendary');
+				expect(
+					getPf2eCheckClassification(
+						{
+							type: [Pf2eSkills.Athletics],
+							dc: 50,
+							other: [],
+						},
+						20,
+					),
+				).toBe('Incredibly hard (+10); Legendary');
 			});
 
 			test('missing DC', () => {
-				expect(getPf2eCheckClassification({
-					system: GameSystem.PF2E,
-					type: ['Athletics'],
-					other: []
-				}, 20)).toBe('');
+				expect(
+					getPf2eCheckClassification(
+						{
+							type: [Pf2eSkills.Athletics],
+							other: [],
+						},
+						20,
+					),
+				).toBe('');
 			});
 
 			test('missing level', () => {
-				expect(getPf2eCheckClassification({
-					system: GameSystem.PF2E,
-					type: ['Athletics'],
-					dc: 20,
-					other: []
-				}, undefined)).toBe('Expert');
+				expect(
+					getPf2eCheckClassification(
+						{
+							type: [Pf2eSkills.Athletics],
+							dc: 20,
+							other: [],
+						},
+						undefined,
+					),
+				).toBe('Expert');
 			});
 		});
 	});

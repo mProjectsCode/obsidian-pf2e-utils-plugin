@@ -10,9 +10,7 @@ describe('PF1e Natural Language Check Parser', () => {
 			if (result) {
 				expect(result.type).toEqual([Pf1eSkills.Diplomacy]);
 				expect(result.dc).toBe(15);
-				expect(result.basic).toBeUndefined();
-				expect(result.defense).toBeUndefined();
-				expect(result.adjustment).toBeUndefined();
+				expect(result.half).toBeFalse();
 			}
 		});
 
@@ -23,9 +21,29 @@ describe('PF1e Natural Language Check Parser', () => {
 			if (result) {
 				expect(result.type).toEqual([Pf1eSkills.Intimidate]);
 				expect(result.dc).toBe(9);
-				expect(result.basic).toBeUndefined();
-				expect(result.defense).toBeUndefined();
-				expect(result.adjustment).toBeUndefined();
+				expect(result.half).toBeFalse();
+			}
+		});
+
+		test('should parse "DC X Skill half" format', () => {
+			const result = parsePf1eCheck('DC 9 Reflex half');
+
+			expect(result).not.toBeUndefined();
+			if (result) {
+				expect(result.type).toEqual([Pf1eMiscSkills.Reflex]);
+				expect(result.dc).toBe(9);
+				expect(result.half).toBeTrue();
+			}
+		});
+
+		test('should parse "Skill DC X half" format', () => {
+			const result = parsePf1eCheck('Reflex DC 9 half');
+
+			expect(result).not.toBeUndefined();
+			if (result) {
+				expect(result.type).toEqual([Pf1eMiscSkills.Reflex]);
+				expect(result.dc).toBe(9);
+				expect(result.half).toBeTrue();
 			}
 		});
 	});
@@ -60,16 +78,26 @@ describe('PF1e Natural Language Check Parser', () => {
 		});
 
 		test.each([
-			{ input: 'DC 15 Knowledge (arcana)', skill: Pf1eSkills.KnowledgeArcana },
-			{ input: 'Knowledge (nature) DC 18', skill: Pf1eSkills.KnowledgeNature },
-			{ input: 'DC 20 Knowledge (history)', skill: Pf1eSkills.KnowledgeHistory },
-			{ input: 'Knowledge (local) DC 12', skill: Pf1eSkills.KnowledgeLocal },
-			{ input: 'DC 25 Knowledge (planes)', skill: Pf1eSkills.KnowledgePlanes },
+			{ input: 'DC 15 Knowledge (arcana)', skill: [Pf1eSkills.KnowledgeArcana] },
+			{ input: 'Knowledge (nature) DC 18', skill: [Pf1eSkills.KnowledgeNature] },
+			{ input: 'DC 20 Knowledge (history)', skill: [Pf1eSkills.KnowledgeHistory] },
+			{ input: 'Knowledge (local) DC 12', skill: [Pf1eSkills.KnowledgeLocal] },
+			{ input: 'DC 25 Knowledge (planes)', skill: [Pf1eSkills.KnowledgePlanes] },
+			{ input: 'DC 25 Knowledge (planes or arcana)', skill: [Pf1eSkills.KnowledgePlanes, Pf1eSkills.KnowledgeArcana] },
+			{ input: 'Knowledge (planes or arcana) DC 25', skill: [Pf1eSkills.KnowledgePlanes, Pf1eSkills.KnowledgeArcana] },
+			{
+				input: 'DC 25 Knowledge (planes, history, or arcana)',
+				skill: [Pf1eSkills.KnowledgePlanes, Pf1eSkills.KnowledgeHistory, Pf1eSkills.KnowledgeArcana],
+			},
+			{
+				input: 'Knowledge (planes, history, or arcana) DC 25',
+				skill: [Pf1eSkills.KnowledgePlanes, Pf1eSkills.KnowledgeHistory, Pf1eSkills.KnowledgeArcana],
+			},
 		])('should parse knowledge skill: $input', ({ input, skill }) => {
 			const result = parsePf1eCheck(input);
 			expect(result).not.toBeUndefined();
 			if (result) {
-				expect(result.type).toEqual([skill]);
+				expect(result.type).toEqual(skill);
 			}
 		});
 

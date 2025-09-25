@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="System extends GameSystem">
 	import { Notice, TFile, type EventRef } from 'obsidian';
 	import CheckHighlight from './CheckHighlight.svelte';
 	import { CheckFinderView } from './CheckFinderView';
@@ -9,14 +9,15 @@
 	import { ButtonStyleType } from '../utils/misc';
 	import SettingComponent from './common/SettingComponent.svelte';
 	import { onDestroy, untrack } from 'svelte';
+	import { GameSystem } from '../rolls/Pf2eCheck';
 
 	const {
 		view,
 	}: {
-		view: CheckFinderView;
+		view: CheckFinderView<System>;
 	} = $props();
 
-	let checks: CheckScanResult[] = $state([]);
+	let checks: CheckScanResult<System>[] = $state([]);
 	let locked: boolean = $state(false);
 	let file: TFile | undefined = $state(undefined);
 	let level: number | undefined = $state(undefined);
@@ -42,7 +43,7 @@
 		}
 	}
 
-	async function transformCheck(check: CheckScanResult) {
+	async function transformCheck(check: CheckScanResult<System>) {
 		await withLocked(async () => {
 			if (!file) {
 				return;
@@ -68,7 +69,7 @@
 			return;
 		}
 		const content = await view.plugin.app.vault.cachedRead(file);
-		checks = await view.checkFinder.findChecks(content);
+		checks = (await view.checkFinder.findChecks(content)) as CheckScanResult<System>[];
 	}
 
 	function selectFile() {

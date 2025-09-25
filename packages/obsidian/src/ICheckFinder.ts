@@ -1,9 +1,9 @@
 import type { TFile } from 'obsidian';
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import type { CheckScanResult } from 'packages/obsidian/src/rolls/NaturalLanguageCheckScanner';
+import type { CheckScanResult, SystemToCheckMap } from 'packages/obsidian/src/rolls/NaturalLanguageCheckScanner';
+import type { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
 
-export interface ICheckFinder {
-	findChecks(content: string): Promise<CheckScanResult[]>;
-	convertCheck(check: CheckScanResult, file: TFile, level: number): Promise<boolean>;
-	formatCheck(check: InlineCheck): string;
+export interface ICheckFinder<System extends GameSystem> {
+	findChecks(content: string): Promise<CheckScanResult<GameSystem>[]>;
+	convertCheck(check: CheckScanResult<System>, file: TFile, level: number): Promise<boolean>;
+	formatCheck(check: SystemToCheckMap[System]): string;
 }

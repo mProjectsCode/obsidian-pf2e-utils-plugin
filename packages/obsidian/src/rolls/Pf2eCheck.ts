@@ -1,6 +1,7 @@
 import type { Parser } from '@lemons_dev/parsinom/lib/Parser';
 import { P_UTILS } from '@lemons_dev/parsinom/lib/ParserUtils';
 import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
+import { Pf2eMiscSkills, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 // We want to parse foundryvtt pf2e inline checks like `@Check[fortitude|dc:20|basic]`
 // https://github.com/foundryvtt/pf2e/wiki/Style-Guide#inline-check-links
@@ -9,7 +10,7 @@ import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
 // @Check[fortitude|dc:20|basic]
 // @Check[athletics|dc:20|traits:action:long-jump]
 // @Check[flat|dc:4]
-// @Check[arcane,occultism|dc:20]
+// @Check[arcana,occultism|dc:20]
 // @Check[crafting,thievery|dc:20|adjustment:0,-2]
 // @Check[deception|defense:perception]
 // @Check[reflex|against:class-spell|basic]
@@ -19,9 +20,8 @@ export enum GameSystem {
 	PF2E = 'PF2E',
 }
 
-export interface InlineCheck {
-	system: GameSystem;
-	type: string[];
+export interface Pf2eCheck {
+	type: (Pf2eSkills | Pf2eMiscSkills)[];
 	dc?: number;
 	defense?: string;
 	adjustment?: number[];
@@ -33,23 +33,29 @@ const IDENTIFIER_PARSER = P.oneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 	.atLeast(1)
 	.map(x => x.join(''));
 
-const TYPE_PARSER = P.separateByNotEmpty(IDENTIFIER_PARSER, P.string(',').trim(P_UTILS.optionalWhitespace()));
+const TYPE_PARSER = P.separateByNotEmpty(
+	P.or(
+		...Object.values(Pf2eSkills).map(skill => P.string(skill.toLowerCase()).result(skill)),
+		...Object.values(Pf2eMiscSkills).map(skill => P.string(skill.toLowerCase()).result(skill)),
+	),
+	P.string(',').trim(P_UTILS.optionalWhitespace()),
+);
 
-const DC_PARSER: Parser<Pick<InlineCheck, 'dc'>> = P.sequenceMap(
+const DC_PARSER: Parser<Pick<Pf2eCheck, 'dc'>> = P.sequenceMap(
 	(_1, num) => ({ dc: Number(num) }),
 	P.string('dc:').trim(P_UTILS.optionalWhitespace()),
 	P_UTILS.digits(),
 );
 
-const DEFENSE_PARSER: Parser<Pick<InlineCheck, 'defense'>> = P.sequenceMap(
+const DEFENSE_PARSER: Parser<Pick<Pf2eCheck, 'defense'>> = P.sequenceMap(
 	(_1, defense) => ({ defense }),
 	P.string('defense:').trim(P_UTILS.optionalWhitespace()),
 	IDENTIFIER_PARSER,
 );
 
-const BASIC_PARSER: Parser<Pick<InlineCheck, 'basic'>> = P.string('basic').result({ basic: true });
+const BASIC_PARSER: Parser<Pick<Pf2eCheck, 'basic'>> = P.string('basic').result({ basic: true });
 
-const ADJUSTMENT_PARSER: Parser<Pick<InlineCheck, 'adjustment'>> = P.sequenceMap(
+const ADJUSTMENT_PARSER: Parser<Pick<Pf2eCheck, 'adjustment'>> = P.sequenceMap(
 	(_1, nums) => ({ adjustment: nums }),
 	P.string('adjustment:').trim(P_UTILS.optionalWhitespace()),
 	P.separateBy(
@@ -62,7 +68,7 @@ const OTHER_ATTR_PARSER: Parser<string> = P.manyNotOf('|]'); // Ignore unknown a
 
 const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 	(type, rest) => {
-		const res = { type, system: GameSystem.PF2E, other: [] as string[] } satisfies Partial<InlineCheck>;
+		const res = { type, other: [] as string[] } satisfies Partial<Pf2eCheck>;
 		for (const part of rest) {
 			if (typeof part === 'string') {
 				res.other.push(part);
@@ -70,12 +76,12 @@ const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 				Object.assign(res, part);
 			}
 		}
-		return res as InlineCheck;
+		return res as Pf2eCheck;
 	},
 	TYPE_PARSER.trim(P_UTILS.optionalWhitespace()),
 	P.sequenceMap(
 		(_sep, part) => part,
-		P.string('|').trim(P_UTILS.optionalWhitespace()),
+		P.or(P.string('|'), P.string('\\|')).trim(P_UTILS.optionalWhitespace()),
 		P.or(DC_PARSER, DEFENSE_PARSER, ADJUSTMENT_PARSER, BASIC_PARSER, OTHER_ATTR_PARSER),
 	).many(),
 );
@@ -104,7 +110,7 @@ export const INLINE_CHECK_PARSER = P.sequenceMap(
  * // Defense check: "Deception vs Perception"
  * formatInlineCheck({ type: ['deception'], defense: 'perception' })
  */
-export function formatInlineCheck(check: InlineCheck): string {
+export function formatPf2eCheck(check: Pf2eCheck): string {
 	const parts: string[] = [];
 
 	// Add DC if present
@@ -181,11 +187,11 @@ export function formatInlineCheck(check: InlineCheck): string {
  * // Multiple skills: "@Check[crafting,thievery|dc:20|adjustment:0,-2]"
  * stringifyInlineCheck({ type: ['crafting', 'thievery'], dc: 20, adjustment: [0, -2], system: GameSystem.PF2E })
  */
-export function stringifyInlineCheck(check: InlineCheck): string {
+export function stringifyInlineCheck(check: Pf2eCheck): string {
 	const parts: string[] = [];
 
 	// Start with the type(s)
-	parts.push(check.type.join(','));
+	parts.push(check.type.map(skill => skill.toLowerCase()).join(','));
 
 	// Add DC if present
 	if (check.dc !== undefined) {
@@ -194,7 +200,7 @@ export function stringifyInlineCheck(check: InlineCheck): string {
 
 	// Add defense if present
 	if (check.defense) {
-		parts.push(`defense:${check.defense}`);
+		parts.push(`defense:${check.defense.toLowerCase()}`);
 	}
 
 	// Add adjustment if present

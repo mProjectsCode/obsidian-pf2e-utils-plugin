@@ -1,12 +1,13 @@
 import { Modal } from 'obsidian';
 import type Pf2eUtilsPlugin from 'packages/obsidian/src/main';
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import { formatInlineCheck, GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
-import { convertPf1eCheckToPf2eCheck } from 'packages/obsidian/src/rolls/InlineCheckConversion';
+import { convertPf1eCheckToPf2eCheck } from 'packages/obsidian/src/rolls/CheckConversion';
+import type {Pf1eCheck} from 'packages/obsidian/src/rolls/Pf1eCheck';
+import { formatPf1eCheck  } from 'packages/obsidian/src/rolls/Pf1eCheck';
+import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import Pf2eInlineCheckBuilder from 'packages/obsidian/src/ui/Pf2eInlineCheckBuilder.svelte';
 import { mount, unmount } from 'svelte';
 
-export async function openCheckConversionModal(plugin: Pf2eUtilsPlugin, check: InlineCheck, level: number): Promise<InlineCheck | undefined> {
+export async function openCheckConversionModal(plugin: Pf2eUtilsPlugin, check: Pf1eCheck, level: number): Promise<Pf2eCheck | undefined> {
 	return new Promise(resolve => {
 		const modal = new CheckConversionModal(
 			plugin,
@@ -25,31 +26,27 @@ export async function openCheckConversionModal(plugin: Pf2eUtilsPlugin, check: I
 
 export class CheckConversionModal extends Modal {
 	private readonly plugin: Pf2eUtilsPlugin;
-	private readonly check: InlineCheck;
+	private readonly check: Pf1eCheck;
 	private readonly level: number;
-	private readonly onSubmit: (check: InlineCheck) => void;
+	private readonly onSubmit: (check: Pf2eCheck) => void;
 	private readonly onCancel: () => void;
 	private svelteComponent: ReturnType<typeof Pf2eInlineCheckBuilder> | undefined;
 	private returned: boolean = false;
 
-	constructor(plugin: Pf2eUtilsPlugin, check: InlineCheck, level: number, onSubmit: (check: InlineCheck) => void, onCancel: () => void) {
+	constructor(plugin: Pf2eUtilsPlugin, check: Pf1eCheck, level: number, onSubmit: (check: Pf2eCheck) => void, onCancel: () => void) {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.check = check;
 		this.level = level;
 		this.onSubmit = onSubmit;
 		this.onCancel = onCancel;
-
-		if (this.check.system !== GameSystem.PF1E) {
-			throw new Error('CheckConversionModal can only be used for pf1e checks');
-		}
 	}
 
 	onOpen(): void {
 		this.setTitle('Convert Check');
 		this.contentEl.empty();
 
-		this.contentEl.createEl('p', { text: `Pf1e check: ${formatInlineCheck(this.check)}` });
+		this.contentEl.createEl('p', { text: `Pf1e check: ${formatPf1eCheck(this.check)}` });
 
 		const builderEl = this.contentEl.createDiv();
 
@@ -63,7 +60,7 @@ export class CheckConversionModal extends Modal {
 					this.returned = true;
 					this.close();
 				},
-				onSubmit: (check: InlineCheck) => {
+				onSubmit: (check: Pf2eCheck) => {
 					this.onSubmit(check);
 					this.returned = true;
 					this.close();

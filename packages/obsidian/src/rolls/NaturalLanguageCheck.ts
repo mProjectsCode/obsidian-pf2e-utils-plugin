@@ -1,8 +1,8 @@
 import type { Parser } from '@lemons_dev/parsinom/lib/Parser';
 import { P_UTILS } from '@lemons_dev/parsinom/lib/ParserUtils';
 import { P } from '@lemons_dev/parsinom/lib/ParsiNOM';
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
+import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
+import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 
 // We want to parse natural language checks like would appear in pathfinder source material
 // This should work for both pf1e and pf2e skill checks
@@ -56,6 +56,7 @@ export enum Pf1eMiscSkills {
 	Intelligence = 'Intelligence',
 	Wisdom = 'Wisdom',
 	Charisma = 'Charisma',
+	CasterLevel = 'Caster Level',
 }
 
 export const ALL_PF1E_SKILLS = [...Object.values(Pf1eSkills), ...Object.values(Pf1eMiscSkills)];
@@ -85,6 +86,8 @@ export enum Pf2eMiscSkills {
 	Fortitude = 'Fortitude',
 	Will = 'Will',
 	Perception = 'Perception',
+	SpellAttack = 'Spell Attack',
+	Flat = 'Flat',
 }
 
 export const ALL_PF2E_SKILLS = [...Object.values(Pf2eSkills), ...Object.values(Pf2eMiscSkills)];
@@ -136,6 +139,7 @@ export const PF1E_TO_PF2E_SKILL_MAP: Record<Pf1eSkills | Pf1eMiscSkills, (Pf2eSk
 	[Pf1eMiscSkills.Intelligence]: [Pf2eSkills.Arcana, Pf2eSkills.Crafting, Pf2eSkills.Lore, Pf2eSkills.Occultism, Pf2eSkills.Society],
 	[Pf1eMiscSkills.Wisdom]: [Pf2eSkills.Medicine, Pf2eSkills.Nature, Pf2eSkills.Religion, Pf2eSkills.Survival],
 	[Pf1eMiscSkills.Charisma]: [Pf2eSkills.Deception, Pf2eSkills.Diplomacy, Pf2eSkills.Intimidation, Pf2eSkills.Performance],
+	[Pf1eMiscSkills.CasterLevel]: [Pf2eMiscSkills.SpellAttack],
 };
 
 // ============================================================================
@@ -145,7 +149,7 @@ export const PF1E_TO_PF2E_SKILL_MAP: Record<Pf1eSkills | Pf1eMiscSkills, (Pf2eSk
 /**
  * Maps skill abbreviations and alternative names to their canonical skill names
  */
-export const PF1E_SKILL_ALTERNATIVES: Record<string, string> = {
+export const PF1E_SKILL_ALTERNATIVES: Record<string, Pf1eSkills | Pf1eMiscSkills> = {
 	// Common abbreviations
 	umd: Pf1eSkills.UseMagicDevice,
 	dd: Pf1eSkills.DisableDevice,
@@ -167,7 +171,20 @@ export const PF1E_SKILL_ALTERNATIVES: Record<string, string> = {
 	'knowledge religion': Pf1eSkills.KnowledgeReligion,
 };
 
-export const PF2E_SKILL_ALTERNATIVES: Record<string, string> = {
+export const PF1E_KNOWLEDGE_SKILL_MAP: Record<string, Pf1eSkills> = {
+	arcana: Pf1eSkills.KnowledgeArcana,
+	dungeoneering: Pf1eSkills.KnowledgeDungeoneering,
+	engineering: Pf1eSkills.KnowledgeEngineering,
+	geography: Pf1eSkills.KnowledgeGeography,
+	history: Pf1eSkills.KnowledgeHistory,
+	local: Pf1eSkills.KnowledgeLocal,
+	nature: Pf1eSkills.KnowledgeNature,
+	nobility: Pf1eSkills.KnowledgeNobility,
+	planes: Pf1eSkills.KnowledgePlanes,
+	religion: Pf1eSkills.KnowledgeReligion,
+};
+
+export const PF2E_SKILL_ALTERNATIVES: Record<string, Pf2eSkills | Pf2eMiscSkills> = {
 	// Common abbreviations (PF2e has simpler skill names)
 	ath: Pf2eSkills.Athletics,
 	acr: Pf2eSkills.Acrobatics,
@@ -198,7 +215,7 @@ function createDcParser(): Parser<number> {
 /**
  * Creates a skill name parser from the provided skill enums and alternatives mapping
  */
-function createSkillNameParser(skillAlternatives: Record<string, string>, ...skillEnums: Record<string, string>[]): Parser<string> {
+function createSkillNameParser<T extends string>(skillAlternatives: Record<string, T>, ...skillEnums: Record<string, T>[]): Parser<T> {
 	const allSkills = skillEnums.flatMap(enumObj => Object.values(enumObj));
 	const allAlternatives = Object.keys(skillAlternatives);
 
@@ -209,10 +226,12 @@ function createSkillNameParser(skillAlternatives: Record<string, string>, ...ski
 	return P.or(...skillParsers, ...alternativeParsers);
 }
 
+export type MaybeArray<T> = T | T[];
+
 /**
  * Creates a skills list parser that handles multiple skills separated by various delimiters
  */
-function createSkillsListParser(skillNameParser: Parser<string>): Parser<string[]> {
+function createSkillsListParser<T extends string>(skillNameParser: Parser<MaybeArray<T>>): Parser<T[]> {
 	// Parser for skill separators
 	const skillSeparatorParser = P.or(
 		P.sequence(P_UTILS.whitespace(), P.string('or'), P_UTILS.whitespace()),
@@ -220,38 +239,17 @@ function createSkillsListParser(skillNameParser: Parser<string>): Parser<string[
 		P.sequence(P_UTILS.optionalWhitespace(), P.string(','), P_UTILS.optionalWhitespace()),
 	);
 
-	return P.separateByNotEmpty(skillNameParser, skillSeparatorParser);
-}
-
-/**
- * Creates a complete natural language check parser for both "DC X Skill" and "Skill DC X" formats
- */
-function createNaturalLanguageParser(system: GameSystem, skillsListParser: Parser<string[]>, dcParser: Parser<number>): Parser<InlineCheck> {
-	// Parser for "DC X Skill" format
-	const dcFirstParser: Parser<InlineCheck> = P.sequenceMap(
-		(dc, skills) => ({
-			system: system,
-			type: skills,
-			dc: dc,
-			other: [],
-		}),
-		dcParser.trim(P_UTILS.optionalWhitespace()),
-		skillsListParser,
-	);
-
-	// Parser for "Skill DC X" format
-	const skillFirstParser: Parser<InlineCheck> = P.sequenceMap(
-		(skills, dc) => ({
-			system: system,
-			type: skills,
-			dc: dc,
-			other: [],
-		}),
-		skillsListParser.trim(P_UTILS.optionalWhitespace()),
-		dcParser,
-	);
-
-	return P.or(dcFirstParser, skillFirstParser);
+	return P.separateByNotEmpty(skillNameParser, skillSeparatorParser).map(skills => {
+		const arr = [];
+		for (const skill of skills) {
+			if (Array.isArray(skill)) {
+				arr.push(...skill);
+			} else {
+				arr.push(skill);
+			}
+		}
+		return arr;
+	});
 }
 
 // ============================================================================
@@ -270,13 +268,68 @@ function createNaturalLanguageParser(system: GameSystem, skillsListParser: Parse
 // DC 15 Linguistics or Knowledge (arcana)
 // DC 18 Knowledge (nature) or Knowledge (religion)
 // DC 20 Knowledge (history), Knowledge (local), or Knowledge (planes)
+// DC 25 Knowledge (arcana or planes)
+// DC 25 Knowledge (arcana, planes, or religion)
+// DC 20 caster level
+// Reflex DC 15 half
 
-// PF1e Parser Implementation using factory functions
-const PF1E_SKILL_NAME_PARSER = createSkillNameParser(PF1E_SKILL_ALTERNATIVES, Pf1eSkills, Pf1eMiscSkills);
-const PF1E_SKILLS_LIST_PARSER = createSkillsListParser(PF1E_SKILL_NAME_PARSER);
-const PF1E_DC_PARSER = createDcParser();
+function createPf1eSkillListParser(): Parser<(Pf1eSkills | Pf1eMiscSkills)[]> {
+	const knowledgeShortParser = createSkillsListParser(
+		P.or(...Object.entries(PF1E_KNOWLEDGE_SKILL_MAP).map(([key, value]) => P.string(key.toLowerCase()).result(value))),
+	);
+	const knowledgeParser = P.sequenceMap(
+		(_1, _2, skills) => skills,
+		P.string('knowledge'),
+		P_UTILS.optionalWhitespace(),
+		knowledgeShortParser.trim(P_UTILS.optionalWhitespace()).wrapString('(', ')'),
+	);
+	const skillAlternativeParser = P.or(...Object.entries(PF1E_SKILL_ALTERNATIVES).map(([key, value]) => P.string(key.toLowerCase()).result(value)));
+	const otherSkillParser = [Pf1eSkills, Pf1eMiscSkills]
+		.flatMap(enumObj => Object.values(enumObj) as (Pf1eSkills | Pf1eMiscSkills)[])
+		.filter(skill => !skill.startsWith('Knowledge'));
+	const skillNameParser = P.or(knowledgeParser, ...otherSkillParser.map(skill => P.string(skill.toLowerCase()).result(skill)), skillAlternativeParser);
 
-export const PF1E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(GameSystem.PF1E, PF1E_SKILLS_LIST_PARSER, PF1E_DC_PARSER);
+	return createSkillsListParser(skillNameParser);
+}
+
+function createPf1eNaturalLanguageParser(): Parser<Pf1eCheck> {
+	const skillListParser = createPf1eSkillListParser();
+	const dcParser = createDcParser();
+	const halfParser = P.string('half')
+		.trim(P_UTILS.optionalWhitespace())
+		.optional()
+		.map(x => !!x);
+
+	// Parser for "DC X Skill" format
+	const dcFirstParser: Parser<Pf1eCheck> = P.sequenceMap(
+		(dc, skills, half) =>
+			({
+				type: skills,
+				dc: dc,
+				half: half,
+			}) satisfies Pf1eCheck,
+		dcParser.trim(P_UTILS.optionalWhitespace()),
+		skillListParser,
+		halfParser,
+	);
+
+	// Parser for "Skill DC X" format
+	const skillFirstParser: Parser<Pf1eCheck> = P.sequenceMap(
+		(skills, dc, half) =>
+			({
+				type: skills,
+				dc: dc,
+				half: half,
+			}) satisfies Pf1eCheck,
+		skillListParser.trim(P_UTILS.optionalWhitespace()),
+		dcParser,
+		halfParser,
+	);
+
+	return P.or(dcFirstParser, skillFirstParser);
+}
+
+export const PF1E_NATURAL_LANGUAGE_PARSER: Parser<Pf1eCheck> = createPf1eNaturalLanguageParser();
 
 /**
  * Parses a PF1e natural language skill check string into an InlineCheck object
@@ -284,7 +337,7 @@ export const PF1E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLa
  * @param input The natural language check string (e.g., "DC 15 Diplomacy", "Intimidate DC 9")
  * @returns An InlineCheck object or undefined if parsing fails
  */
-export function parsePf1eCheck(input: string): InlineCheck | undefined {
+export function parsePf1eCheck(input: string): Pf1eCheck | undefined {
 	const lowerInput = input.toLowerCase();
 	return PF1E_NATURAL_LANGUAGE_PARSER.tryParse(lowerInput).value;
 }
@@ -302,12 +355,37 @@ export function parsePf1eCheck(input: string): InlineCheck | undefined {
 // DC 22 Crafting, Thievery
 // DC 15 Arcana, Nature, or Religion
 
-// PF2e Parser Implementation using factory functions
-const PF2E_SKILL_NAME_PARSER = createSkillNameParser(PF2E_SKILL_ALTERNATIVES, Pf2eSkills, Pf2eMiscSkills);
-const PF2E_SKILLS_LIST_PARSER = createSkillsListParser(PF2E_SKILL_NAME_PARSER);
-const PF2E_DC_PARSER = createDcParser();
+function createPf2eNaturalLanguageParser(): Parser<Pf2eCheck> {
+	const skillNameParser = createSkillNameParser(PF2E_SKILL_ALTERNATIVES, Pf2eSkills, Pf2eMiscSkills);
+	const skillListParser = createSkillsListParser(skillNameParser);
+	const dcParser = createDcParser();
 
-export const PF2E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLanguageParser(GameSystem.PF2E, PF2E_SKILLS_LIST_PARSER, PF2E_DC_PARSER);
+	// Parser for "DC X Skill" format
+	const dcFirstParser: Parser<Pf2eCheck> = P.sequenceMap(
+		(dc, skills) => ({
+			type: skills,
+			dc: dc,
+			other: [],
+		}),
+		dcParser.trim(P_UTILS.optionalWhitespace()),
+		skillListParser,
+	);
+
+	// Parser for "Skill DC X" format
+	const skillFirstParser: Parser<Pf2eCheck> = P.sequenceMap(
+		(skills, dc) => ({
+			type: skills,
+			dc: dc,
+			other: [],
+		}),
+		skillListParser.trim(P_UTILS.optionalWhitespace()),
+		dcParser,
+	);
+
+	return P.or(dcFirstParser, skillFirstParser);
+}
+
+export const PF2E_NATURAL_LANGUAGE_PARSER: Parser<Pf2eCheck> = createPf2eNaturalLanguageParser();
 
 /**
  * Parses a PF2e natural language skill check string into an InlineCheck object
@@ -315,7 +393,7 @@ export const PF2E_NATURAL_LANGUAGE_PARSER: Parser<InlineCheck> = createNaturalLa
  * @param input The natural language check string (e.g., "DC 15 Deception", "Athletics DC 20")
  * @returns An InlineCheck object or undefined if parsing fails
  */
-export function parsePf2eCheck(input: string): InlineCheck | undefined {
+export function parsePf2eCheck(input: string): Pf2eCheck | undefined {
 	const lowerInput = input.toLowerCase();
 	return PF2E_NATURAL_LANGUAGE_PARSER.tryParse(lowerInput).value;
 }

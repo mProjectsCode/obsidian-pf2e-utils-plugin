@@ -1,6 +1,5 @@
+import type { Parser } from '@lemons_dev/parsinom/lib/Parser';
 import { P_UTILS } from '@lemons_dev/parsinom/lib/ParserUtils';
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
 import {
 	PF1E_NATURAL_LANGUAGE_PARSER,
 	PF1E_SKILL_ALTERNATIVES,
@@ -11,14 +10,17 @@ import {
 	Pf2eMiscSkills,
 	Pf2eSkills,
 } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
+import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
+import { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import { Trie } from 'packages/obsidian/src/utils/Trie';
 
 /**
  * Represents the result of finding a natural language check in text
  */
-export interface CheckScanResult {
+export interface CheckScanResult<T extends GameSystem> {
 	/** The parsed check object */
-	check: InlineCheck;
+	check: SystemToCheckMap[T];
 	/** The original text that was matched */
 	text: string;
 	/** Starting index of the match in the original input */
@@ -33,6 +35,11 @@ export interface CheckScanResult {
 	lineEndIndex: number;
 }
 
+export interface SystemToCheckMap {
+	[GameSystem.PF1E]: Pf1eCheck;
+	[GameSystem.PF2E]: Pf2eCheck;
+}
+
 /**
  * Efficiently scans a large body of text for natural language skill checks.
  *
@@ -40,11 +47,11 @@ export interface CheckScanResult {
  * @param system The game system to use ('pf1e' or 'pf2e')
  * @returns Array of scan results containing parsed checks and their locations
  */
-export function scanForNaturalLanguageChecks(input: string, system: GameSystem): CheckScanResult[] {
-	const results: CheckScanResult[] = [];
+export function scanForNaturalLanguageChecks<System extends GameSystem>(input: string, system: System): CheckScanResult<System>[] {
+	const results: CheckScanResult<System>[] = [];
 
 	// Get the appropriate parser function
-	const p = system === GameSystem.PF1E ? PF1E_NATURAL_LANGUAGE_PARSER : PF2E_NATURAL_LANGUAGE_PARSER;
+	const p = (system === GameSystem.PF1E ? PF1E_NATURAL_LANGUAGE_PARSER : PF2E_NATURAL_LANGUAGE_PARSER) as Parser<SystemToCheckMap[System]>;
 	const parser = p.and(P_UTILS.position());
 
 	const trie = new Trie<string>();
@@ -116,7 +123,7 @@ export function scanForNaturalLanguageChecks(input: string, system: GameSystem):
  * @param input The text to scan
  * @returns Array of scan results for PF1e checks
  */
-export function scanForPf1eChecks(input: string): CheckScanResult[] {
+export function scanForPf1eChecks(input: string): CheckScanResult<GameSystem.PF1E>[] {
 	return scanForNaturalLanguageChecks(input, GameSystem.PF1E);
 }
 
@@ -126,6 +133,6 @@ export function scanForPf1eChecks(input: string): CheckScanResult[] {
  * @param input The text to scan
  * @returns Array of scan results for PF2e checks
  */
-export function scanForPf2eChecks(input: string): CheckScanResult[] {
+export function scanForPf2eChecks(input: string): CheckScanResult<GameSystem.PF2E>[] {
 	return scanForNaturalLanguageChecks(input, GameSystem.PF2E);
 }

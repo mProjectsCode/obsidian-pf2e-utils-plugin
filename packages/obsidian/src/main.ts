@@ -2,7 +2,7 @@ import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { Notice, Plugin } from 'obsidian';
 import { InlineCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
 import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguageCheckFinder';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
+import { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import type { Pf2eUtilsSettings } from 'packages/obsidian/src/settings/Settings';
 import { DEFAULT_SETTINGS } from 'packages/obsidian/src/settings/Settings';
 import { SampleSettingTab } from 'packages/obsidian/src/settings/SettingTab';

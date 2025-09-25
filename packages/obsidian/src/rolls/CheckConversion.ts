@@ -1,3 +1,8 @@
+import type { Pf1eMiscSkills, Pf1eSkills, Pf2eMiscSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import { PF1E_TO_PF2E_SKILL_MAP, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
+import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
+
 // Table: https://docs.google.com/spreadsheets/d/17lA-ymHQKg38AHzyQQT8X7BoOoYlfc5FKucpwGUh0N8/edit?gid=0#gid=0
 // 1		2		3		4		5		6		7		8		9		10		11		12		13		14		15		16		17		18		19		20
 // -2	5	-1	6	0	8	1	9	2	10	3	12	4	13	5	14	6	16	7	17	8	18	9	20	10	21	11	22	12	24	13	25	14	26	15	28	16	29	17	30
@@ -31,11 +36,6 @@
 // 26	23	27	24	28	26	29	27	30	28	31	30	32	31	33	32	34	34	35	35	36	36	37	38	38	39	39	40	40	42	41	43	42	44	43	46	44	47	45	48
 // 27	24	28	25	29	27	30	28	31	29	32	31	33	32	34	33	35	35	36	36	37	37	38	39	39	40	40	41	41	43	42	44	43	45	44	47	45	48	46	49
 // 28	25	29	26	30	28	31	29	32	30	33	32	34	33	35	34	36	36	37	37	38	38	39	40	40	41	41	42	42	44	43	45	44	46	45	48	46	49	47	50
-
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import { GameSystem } from 'packages/obsidian/src/rolls/InlineCheck';
-import type { Pf1eMiscSkills, Pf1eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
-import { PF1E_TO_PF2E_SKILL_MAP, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 interface DCTableEntry {
 	// the starting PF1e DC
@@ -136,28 +136,17 @@ export function pf2eCheckDifficulty(level: number, pf2eDC: number): Pf2eCheckDif
 	return Pf2eCheckDifficulty.INCREDIBLY_HARD;
 }
 
-export function convertPf1eSkillToPf2eSkill(pf1eSkill: string): string[] {
-	return PF1E_TO_PF2E_SKILL_MAP[pf1eSkill as Pf1eSkills | Pf1eMiscSkills] || [pf1eSkill];
+export function convertPf1eSkillToPf2eSkill(pf1eSkill: Pf1eSkills | Pf1eMiscSkills): (Pf2eSkills | Pf2eMiscSkills)[] {
+	return PF1E_TO_PF2E_SKILL_MAP[pf1eSkill] ?? [];
 }
 
-export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: number, excludeLore: boolean): InlineCheck {
-	if (pf1eCheck.system !== GameSystem.PF1E) {
-		throw new Error('Can only convert pf1e checks to pf2e checks');
-	}
-	if (pf1eCheck.adjustment && pf1eCheck.adjustment.length !== pf1eCheck.type.length) {
-		throw new Error('Pf1e check adjustment length must match type length');
-	}
-
-	const pf2eTypes = pf1eCheck.type.map((t, i) => [convertPf1eSkillToPf2eSkill(t), pf1eCheck.adjustment ? pf1eCheck.adjustment[i] : 0] as const);
+export function convertPf1eCheckToPf2eCheck(pf1eCheck: Pf1eCheck, level: number, excludeLore: boolean): Pf2eCheck {
+	const pf2eTypes = pf1eCheck.type.flatMap(t => convertPf1eSkillToPf2eSkill(t));
 
 	// dedupe types, keeping the lowest adjustment
-	const typeMap = new Map<string, number>();
-	for (const [types, adj] of pf2eTypes) {
-		for (const type of types) {
-			if (!typeMap.has(type) || (typeMap.get(type) ?? 0) > adj) {
-				typeMap.set(type, adj);
-			}
-		}
+	const typeMap = new Set<Pf2eSkills | Pf2eMiscSkills>();
+	for (const type of pf2eTypes) {
+		typeMap.add(type);
 	}
 
 	if (excludeLore) {
@@ -165,10 +154,9 @@ export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: numbe
 	}
 
 	const flatTypes = Array.from(typeMap.keys());
-	const adjustments = Array.from(typeMap.values());
+	const adjustments = Array.from(typeMap.keys()).map(_ => 0);
 
 	return {
-		system: GameSystem.PF2E,
 		type: flatTypes,
 		dc: pf1eCheck.dc !== undefined ? convertPf1eToPf2eDC(level, pf1eCheck.dc) : undefined,
 		adjustment: adjustments,
@@ -176,13 +164,13 @@ export function convertPf1eCheckToPf2eCheck(pf1eCheck: InlineCheck, level: numbe
 	};
 }
 
-export function getPf2eCheckClassification(check: InlineCheck, level: number | undefined): string {
+export function getPf2eCheckClassification(check: Pf2eCheck, level: number | undefined): string {
 	const difficulty = getDifficultyString(check, level);
 	const requiredProf = getRequiredProficiencyString(check);
 	return [difficulty, requiredProf].filter(Boolean).join('; ');
 }
 
-function getDifficultyString(check: InlineCheck, level: number | undefined): string {
+function getDifficultyString(check: Pf2eCheck, level: number | undefined): string {
 	if (!check || level === undefined || check.dc === undefined) {
 		return '';
 	}
@@ -195,7 +183,7 @@ function getDifficultyString(check: InlineCheck, level: number | undefined): str
 	return `${difficulty} (${diffStr})`;
 }
 
-function getRequiredProficiencyString(check: InlineCheck): string {
+function getRequiredProficiencyString(check: Pf2eCheck): string {
 	if (check?.dc === undefined) {
 		return '';
 	}

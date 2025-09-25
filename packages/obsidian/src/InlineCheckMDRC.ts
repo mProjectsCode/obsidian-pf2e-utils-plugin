@@ -1,13 +1,13 @@
 import { MarkdownRenderChild, Notice } from 'obsidian';
-import type { InlineCheck } from 'packages/obsidian/src/rolls/InlineCheck';
-import { formatInlineCheck, INLINE_CHECK_PARSER } from 'packages/obsidian/src/rolls/InlineCheck';
-import { getPf2eCheckClassification } from 'packages/obsidian/src/rolls/InlineCheckConversion';
+import { getPf2eCheckClassification } from 'packages/obsidian/src/rolls/CheckConversion';
+import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
+import { formatPf2eCheck, INLINE_CHECK_PARSER } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import { cleanEscapes } from 'packages/obsidian/src/utils/misc';
 
 export class InlineCheckMDRC extends MarkdownRenderChild {
 	private content: string;
 	private cleanedContent: string;
-	private check: InlineCheck | undefined;
+	private check: Pf2eCheck | undefined;
 	private level: number | undefined;
 
 	constructor(containerEl: HTMLElement, content: string, level: number | undefined) {
@@ -21,7 +21,7 @@ export class InlineCheckMDRC extends MarkdownRenderChild {
 	onload(): void {
 		this.containerEl.empty();
 		if (this.check) {
-			const formatted = formatInlineCheck(this.check);
+			const formatted = formatPf2eCheck(this.check);
 			const span = this.containerEl.createEl('span', { text: formatted });
 			span.addEventListener('click', () => {
 				void navigator.clipboard.writeText(this.cleanedContent);
