@@ -3,7 +3,7 @@ import { ItemView } from 'obsidian';
 import type { ICheckFinder } from 'packages/obsidian/src/ICheckFinder';
 import type Pf2eUtilsPlugin from 'packages/obsidian/src/main';
 import type { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
-import CheckFinderComponent from 'packages/obsidian/src/ui/CheckFinderComponent.svelte';
+import CheckFinderComponent from 'packages/obsidian/src/ui/checkFinder/CheckFinderComponent.svelte';
 import type { Component as SvelteComponent } from 'svelte';
 import { mount, unmount } from 'svelte';
 

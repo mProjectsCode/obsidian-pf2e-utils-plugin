@@ -2,11 +2,12 @@ import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { Notice, Plugin } from 'obsidian';
 import { InlineCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
 import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguageCheckFinder';
-import { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
+import { GameSystem, stringifyPf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import type { Pf2eUtilsSettings } from 'packages/obsidian/src/settings/Settings';
 import { DEFAULT_SETTINGS } from 'packages/obsidian/src/settings/Settings';
 import { SampleSettingTab } from 'packages/obsidian/src/settings/SettingTab';
-import { CheckFinderView } from 'packages/obsidian/src/ui/CheckFinderView';
+import { CheckFinderView } from 'packages/obsidian/src/ui/checkFinder/CheckFinderView';
+import { openCheckBuilderModal } from 'packages/obsidian/src/ui/modals/CheckBuilderModal';
 
 const VIEW_TYPE_CHECK_FINDER_PF2E = 'pf2e-utils-check-finder-pf2e';
 const VIEW_TYPE_CHECK_FINDER_PF1E = 'pf2e-utils-check-finder-pf1e';
@@ -71,6 +72,22 @@ export default class Pf2eUtilsPlugin extends Plugin {
 			name: 'Open PF2E Check Finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);
+			},
+		});
+
+		this.addCommand({
+			id: 'open-pf2e-check-builder',
+			name: 'Open PF2E Check Builder',
+			callback: async () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				const level = activeFile ? this.getLevelFromFrontmatter(activeFile) : undefined;
+
+				const check = await openCheckBuilderModal(this, level, 'Copy to Clipboard');
+
+				if (check) {
+					await navigator.clipboard.writeText('`' + stringifyPf2eCheck(check) + '`');
+					new Notice('Check copied to clipboard');
+				}
 			},
 		});
 	}

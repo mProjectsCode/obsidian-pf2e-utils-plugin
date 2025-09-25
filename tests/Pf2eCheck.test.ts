@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { INLINE_CHECK_PARSER, type Pf2eCheck, stringifyInlineCheck, GameSystem, formatPf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
+import { INLINE_CHECK_PARSER, type Pf2eCheck, stringifyPf2eCheck, GameSystem, formatPf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
 import { Pf1eMiscSkills, Pf1eSkills, Pf2eMiscSkills, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 describe('PF2E Check Parser', () => {
@@ -332,7 +332,7 @@ describe('PF2E Check Stringify', () => {
 				expected: '@Check[reflex|basic|against:class-spell]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
-			expect(stringifyInlineCheck(check)).toBe(expected);
+			expect(stringifyPf2eCheck(check)).toBe(expected);
 		});
 	});
 
@@ -361,7 +361,7 @@ describe('PF2E Check Stringify', () => {
 				expected: '@Check[athletics,acrobatics|dc:15|defense:ac|adjustment:2,-1|basic|traits:action:climb|against:spell]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
-			expect(stringifyInlineCheck(check)).toBe(expected);
+			expect(stringifyPf2eCheck(check)).toBe(expected);
 		});
 	});
 
@@ -398,7 +398,7 @@ describe('PF2E Check Stringify', () => {
 				expected: '@Check[diplomacy,deception|adjustment:0,-2]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
-			expect(stringifyInlineCheck(check)).toBe(expected);
+			expect(stringifyPf2eCheck(check)).toBe(expected);
 		});
 	});
 
@@ -420,7 +420,7 @@ describe('PF2E Check Stringify', () => {
 				expected: '@Check[intimidation|dc:15|basic|traits:emotion,fear,mental]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
-			expect(stringifyInlineCheck(check)).toBe(expected);
+			expect(stringifyPf2eCheck(check)).toBe(expected);
 		});
 	});
 
@@ -432,7 +432,7 @@ describe('PF2E Check Stringify', () => {
 				expected: '@Check[perception]',
 			},
 		])('should stringify $description', ({ check, expected }) => {
-			expect(stringifyInlineCheck(check)).toBe(expected);
+			expect(stringifyPf2eCheck(check)).toBe(expected);
 		});
 	});
 
@@ -454,7 +454,7 @@ describe('PF2E Check Stringify', () => {
 			expect(parseResult.success).toBe(true);
 
 			if (parseResult.success) {
-				const stringified = stringifyInlineCheck(parseResult.value);
+				const stringified = stringifyPf2eCheck(parseResult.value);
 				const reparsed = INLINE_CHECK_PARSER.tryParse(stringified);
 
 				expect(reparsed.success).toBe(true);

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatPf2eCheck, stringifyInlineCheck, type Pf2eCheck } from '../rolls/Pf2eCheck';
+	import { formatPf2eCheck, stringifyPf2eCheck, type Pf2eCheck } from '../rolls/Pf2eCheck';
 	import { getPf2eCheckClassification, pf2eLevelBasedDC } from '../rolls/CheckConversion';
 	import { ALL_PF2E_SKILLS, Pf2eMiscSkills, Pf2eSkills } from '../rolls/NaturalLanguageCheck';
 	import { ButtonStyleType } from '../utils/misc';
@@ -22,33 +22,20 @@
 		onSubmit,
 		prefillCheck,
 		level,
+		submitLabel = 'Submit',
 	}: {
 		onCancel: () => void;
 		onSubmit: (check: Pf2eCheck) => void;
 		prefillCheck?: Pf2eCheck | undefined;
-		level: number;
+		level: number | undefined;
+		submitLabel: string | undefined;
 	} = $props();
 
-	let types: CheckTypeOption[] = $state(
-		prefillCheck?.type.map((t, i) => ({
-			type: t,
-			adjustment: prefillCheck?.adjustment?.[i] ?? 0,
-		})) ?? [
-			{
-				type: undefined,
-				adjustment: 0,
-			},
-		],
-	);
-
+	let types: CheckTypeOption[] = $state(getInitialTypes());
 	let dc: number | undefined | null = $state(prefillCheck?.dc ?? null);
-
-	let other: string = $state('');
-
-	// defense and DC are mutually exclusive
-	let defense: string | undefined = $state(prefillCheck?.defense ?? undefined);
-
-	let basic: boolean = $state(true);
+	let other: string = $state(prefillCheck?.other?.join('|') ?? '');
+	let defense: string = $state(prefillCheck?.defense ?? '');
+	let basic: boolean = $state(prefillCheck?.basic ?? true);
 
 	let check: Pf2eCheck | undefined = $derived.by(() => {
 		if (error) {
@@ -65,7 +52,7 @@
 			type: filteredTypes.map(t => t.type),
 			adjustment: filteredTypes.map(t => t.adjustment ?? 0),
 			dc: dc ?? undefined,
-			defense: defense,
+			defense: defense !== '' ? defense : undefined,
 			basic: basicEligible && basic,
 			other: other
 				.split('|')
@@ -96,11 +83,29 @@
 
 		return undefined;
 	});
+
+	function getInitialTypes(): CheckTypeOption[] {
+		if (prefillCheck?.type) {
+			return prefillCheck.type.map((t, i) => ({
+				type: t,
+				adjustment: prefillCheck?.adjustment?.[i] ?? 0,
+			}));
+		} else {
+			return [
+				{
+					type: undefined,
+					adjustment: 0,
+				},
+			];
+		}
+	}
 </script>
 
 <div>
-	<p>Pf2e level: {level}</p>
-	<p>Level based DC: {pf2eLevelBasedDC(level)}</p>
+	{#if level !== undefined}
+		<p>Pf2e level: {level}</p>
+		<p>Level based DC: {pf2eLevelBasedDC(level)}</p>
+	{/if}
 
 	<SettingComponent heading={true} name="Check Types"></SettingComponent>
 
@@ -111,7 +116,7 @@
 					{#each ALL_PF2E_SKILLS as skill}
 						<option value={skill}>{skill}</option>
 					{/each}
-					<option value="">None</option>
+					<option value={undefined}>None</option>
 				</select>
 				<input type="number" bind:value={type.adjustment} placeholder="Adjustment" />
 				<Button
@@ -153,7 +158,7 @@
 	{#if error}
 		<p class="mod-warning">{error}</p>
 	{:else if check}
-		<p>{stringifyInlineCheck(check)}</p>
+		<p>{stringifyPf2eCheck(check)}</p>
 		<p>{formatPf2eCheck(check)}</p>
 		<p>{getPf2eCheckClassification(check, level)}</p>
 	{:else}
@@ -169,7 +174,7 @@
 					onSubmit(check);
 				}
 			}}
-			disabled={!check}>Submit</Button
+			disabled={!check}>{submitLabel}</Button
 		>
 	</div>
 </div>

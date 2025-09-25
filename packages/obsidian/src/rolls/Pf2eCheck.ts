@@ -29,9 +29,7 @@ export interface Pf2eCheck {
 	other: string[];
 }
 
-const IDENTIFIER_PARSER = P.oneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_')
-	.atLeast(1)
-	.map(x => x.join(''));
+const OTHER_ATTR_PARSER: Parser<string> = P.manyNotOf('|]'); // Ignore unknown attributes
 
 const TYPE_PARSER = P.separateByNotEmpty(
 	P.or(
@@ -50,7 +48,7 @@ const DC_PARSER: Parser<Pick<Pf2eCheck, 'dc'>> = P.sequenceMap(
 const DEFENSE_PARSER: Parser<Pick<Pf2eCheck, 'defense'>> = P.sequenceMap(
 	(_1, defense) => ({ defense }),
 	P.string('defense:').trim(P_UTILS.optionalWhitespace()),
-	IDENTIFIER_PARSER,
+	OTHER_ATTR_PARSER,
 );
 
 const BASIC_PARSER: Parser<Pick<Pf2eCheck, 'basic'>> = P.string('basic').result({ basic: true });
@@ -63,8 +61,6 @@ const ADJUSTMENT_PARSER: Parser<Pick<Pf2eCheck, 'adjustment'>> = P.sequenceMap(
 		P.string(',').trim(P_UTILS.optionalWhitespace()),
 	),
 );
-
-const OTHER_ATTR_PARSER: Parser<string> = P.manyNotOf('|]'); // Ignore unknown attributes
 
 const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 	(type, rest) => {
@@ -187,7 +183,7 @@ export function formatPf2eCheck(check: Pf2eCheck): string {
  * // Multiple skills: "@Check[crafting,thievery|dc:20|adjustment:0,-2]"
  * stringifyInlineCheck({ type: ['crafting', 'thievery'], dc: 20, adjustment: [0, -2], system: GameSystem.PF2E })
  */
-export function stringifyInlineCheck(check: Pf2eCheck): string {
+export function stringifyPf2eCheck(check: Pf2eCheck): string {
 	const parts: string[] = [];
 
 	// Start with the type(s)

@@ -6,8 +6,8 @@ import { scanForNaturalLanguageChecks } from 'packages/obsidian/src/rolls/Natura
 import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
 import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
-import { stringifyInlineCheck as stringifyPf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
-import { openCheckConversionModal } from 'packages/obsidian/src/ui/CheckConversionModal';
+import { stringifyPf2eCheck as stringifyPf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
+import { openCheckConversionModal } from 'packages/obsidian/src/ui/modals/CheckConversionModal';
 
 export class NaturalLanguageCheckFinder<System extends GameSystem> implements ICheckFinder<System> {
 	private readonly plugin: Pf2eUtilsPlugin;

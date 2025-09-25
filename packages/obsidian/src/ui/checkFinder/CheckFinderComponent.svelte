@@ -2,14 +2,14 @@
 	import { Notice, TFile, type EventRef } from 'obsidian';
 	import CheckHighlight from './CheckHighlight.svelte';
 	import { CheckFinderView } from './CheckFinderView';
-	import type { CheckScanResult } from '../rolls/NaturalLanguageCheckScanner';
-	import { FilePrompt } from './FilePrompt';
-	import { openLevelUpdateModal } from './LevelUpdateModal';
-	import Button from './common/Button.svelte';
-	import { ButtonStyleType } from '../utils/misc';
-	import SettingComponent from './common/SettingComponent.svelte';
+	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
+	import { FilePrompt } from '../modals/FilePrompt';
+	import { openLevelUpdateModal } from '../modals/LevelUpdateModal';
+	import Button from '../common/Button.svelte';
+	import { ButtonStyleType } from '../../utils/misc';
+	import SettingComponent from '../common/SettingComponent.svelte';
 	import { onDestroy, untrack } from 'svelte';
-	import { GameSystem } from '../rolls/Pf2eCheck';
+	import { GameSystem } from '../../rolls/Pf2eCheck';
 
 	const {
 		view,
