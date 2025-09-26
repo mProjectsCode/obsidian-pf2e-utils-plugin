@@ -60,7 +60,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'open-check-finder-pf1e',
+			id: 'open-pf1e-check-finder',
 			name: 'Open PF1E Check Finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF1E);
@@ -68,7 +68,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'open-check-finder-pf2e',
+			id: 'open-pf2e-check-finder',
 			name: 'Open PF2E Check Finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);

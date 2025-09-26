@@ -1,13 +1,14 @@
 // @ts-check
 
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import only_warn from 'eslint-plugin-only-warn';
 import no_relative_import_paths from 'eslint-plugin-no-relative-import-paths';
 import * as plugin_import from 'eslint-plugin-import';
 import eslintPluginSvelte from 'eslint-plugin-svelte';
 
-export default tseslint.config(
+export default defineConfig(
 	{
 		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '**/*.svelte', '**/*.d.ts'],
 	},

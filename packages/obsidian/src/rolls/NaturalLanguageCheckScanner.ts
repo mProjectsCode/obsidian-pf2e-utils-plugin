@@ -92,7 +92,7 @@ export function scanForNaturalLanguageChecks<System extends GameSystem>(input: s
 
 				const result = parser.tryParse(subStr);
 				if (result.success) {
-					const endIndex = i + result.value[1].index;
+					const endIndex = i + result.value[1];
 					const match = line.slice(i, endIndex);
 
 					results.push({
