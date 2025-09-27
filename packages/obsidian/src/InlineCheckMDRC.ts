@@ -4,7 +4,7 @@ import type { Pf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import { formatPf2eCheck, INLINE_CHECK_PARSER } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import { cleanEscapes } from 'packages/obsidian/src/utils/misc';
 
-export class InlineCheckMDRC extends MarkdownRenderChild {
+export class Pf2eCheckMDRC extends MarkdownRenderChild {
 	private content: string;
 	private cleanedContent: string;
 	private check: Pf2eCheck | undefined;
@@ -14,7 +14,7 @@ export class InlineCheckMDRC extends MarkdownRenderChild {
 		super(containerEl);
 		this.content = content;
 		this.cleanedContent = cleanEscapes(content);
-		this.check = INLINE_CHECK_PARSER.tryParse(this.cleanedContent).value;
+		this.check = INLINE_CHECK_PARSER.tryParse(this.cleanedContent.toLowerCase()).value;
 		this.level = level;
 	}
 

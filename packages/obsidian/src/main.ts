@@ -1,6 +1,6 @@
 import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { Notice, Plugin } from 'obsidian';
-import { InlineCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
+import { Pf2eCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';
 import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguageCheckFinder';
 import { GameSystem, stringifyPf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import type { Pf2eUtilsSettings } from 'packages/obsidian/src/settings/Settings';
@@ -44,7 +44,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 				const content = codeBlock.innerText.trim();
 				if (content.startsWith('@Check[') && content.endsWith(']')) {
-					ctx.addChild(new InlineCheckMDRC(codeBlock, content, level));
+					ctx.addChild(new Pf2eCheckMDRC(codeBlock, content, level));
 				}
 			}
 		});

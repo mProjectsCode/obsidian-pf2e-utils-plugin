@@ -84,7 +84,7 @@ const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 
 export const INLINE_CHECK_PARSER = P.sequenceMap(
 	(_1, inner, _2) => inner,
-	P.string('@Check['),
+	P.or(P.string('@Check['), P.string('@check[')),
 	INLINE_CHECK_INNER_PARSER.trim(P_UTILS.optionalWhitespace()),
 	P.string(']'),
 );
