@@ -2,6 +2,12 @@ import { describe, test, expect } from 'bun:test';
 import { INLINE_CHECK_PARSER, type Pf2eCheck, stringifyPf2eCheck, GameSystem, formatPf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
 import { Pf1eMiscSkills, Pf1eSkills, Pf2eMiscSkills, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
+interface CheckStringifyCase {
+	description: string;
+	check: Pf2eCheck;
+	expected: string;
+}
+
 describe('PF2E Check Parser', () => {
 	describe('Example Cases', () => {
 		test('should parse basic fortitude check with DC', () => {
@@ -305,7 +311,7 @@ describe('PF2E Check Parser', () => {
 
 describe('PF2E Check Stringify', () => {
 	describe('Basic Cases', () => {
-		test.each([
+		test.each<CheckStringifyCase>([
 			{
 				description: 'basic fortitude check with DC',
 				check: { type: [Pf2eMiscSkills.Fortitude], other: [], dc: 20, basic: true },
@@ -337,7 +343,7 @@ describe('PF2E Check Stringify', () => {
 	});
 
 	describe('Multiple Skills', () => {
-		test.each([
+		test.each<CheckStringifyCase>([
 			{
 				description: 'multiple skill types with DC',
 				check: { type: [Pf2eSkills.Arcana, Pf2eSkills.Occultism], other: [], dc: 20 },
@@ -366,7 +372,7 @@ describe('PF2E Check Stringify', () => {
 	});
 
 	describe('Adjustments', () => {
-		test.each([
+		test.each<CheckStringifyCase>([
 			{
 				description: 'check with positive and negative adjustments',
 				check: { type: [Pf2eSkills.Stealth], other: [], dc: 18, adjustment: [5, -3, 0, 2] },
@@ -403,7 +409,7 @@ describe('PF2E Check Stringify', () => {
 	});
 
 	describe('Complex Traits', () => {
-		test.each([
+		test.each<CheckStringifyCase>([
 			{
 				description: 'check with complex traits',
 				check: { type: [Pf2eSkills.Medicine], other: ['traits:action:treat-wounds:expert'], dc: 25 },
@@ -425,7 +431,7 @@ describe('PF2E Check Stringify', () => {
 	});
 
 	describe('Minimal Cases', () => {
-		test.each([
+		test.each<CheckStringifyCase>([
 			{
 				description: 'check with only skill type',
 				check: { type: [Pf2eMiscSkills.Perception], other: [] },

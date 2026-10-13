@@ -1,3 +1,4 @@
+import 'packages/obsidian/src/styles.css';
 import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { Notice, Plugin } from 'obsidian';
 import { Pf2eCheckMDRC } from 'packages/obsidian/src/InlineCheckMDRC';

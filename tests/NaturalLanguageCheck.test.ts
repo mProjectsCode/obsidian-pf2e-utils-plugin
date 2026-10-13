@@ -97,7 +97,7 @@ describe('PF1e Natural Language Check Parser', () => {
 			const result = parsePf1eCheck(input);
 			expect(result).not.toBeUndefined();
 			if (result) {
-				expect(result.type).toEqual(skill);
+				expect(result.type).toEqual([...skill]);
 			}
 		});
 
@@ -299,7 +299,7 @@ describe('PF1e Natural Language Check Parser', () => {
 			const result = parsePf1eCheck(input);
 			expect(result).not.toBeUndefined();
 			if (result) {
-				expect(result.type).toEqual(expectedType);
+				expect(result.type).toEqual([...expectedType]);
 				expect(result.dc).toBe(expectedDC);
 			}
 		});
@@ -521,7 +521,7 @@ describe('PF2e Natural Language Check Parser', () => {
 			const result = parsePf2eCheck(input);
 			expect(result).not.toBeUndefined();
 			if (result) {
-				expect(result.type).toEqual(expectedType);
+				expect(result.type).toEqual([...expectedType]);
 				expect(result.dc).toBe(expectedDC);
 			}
 		});
