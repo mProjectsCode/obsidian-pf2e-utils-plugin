@@ -6,7 +6,7 @@ import { NaturalLanguageCheckFinder } from 'packages/obsidian/src/NaturalLanguag
 import { GameSystem, stringifyPf2eCheck } from 'packages/obsidian/src/rolls/Pf2eCheck';
 import type { Pf2eUtilsSettings } from 'packages/obsidian/src/settings/Settings';
 import { DEFAULT_SETTINGS } from 'packages/obsidian/src/settings/Settings';
-import { SampleSettingTab } from 'packages/obsidian/src/settings/SettingTab';
+import { Pf2eUtilsSettingTab } from 'packages/obsidian/src/settings/SettingTab';
 import { CheckFinderView } from 'packages/obsidian/src/ui/checkFinder/CheckFinderView';
 import { openCheckBuilderModal } from 'packages/obsidian/src/ui/modals/CheckBuilderModal';
 
@@ -14,12 +14,12 @@ const VIEW_TYPE_CHECK_FINDER_PF2E = 'pf2e-utils-check-finder-pf2e';
 const VIEW_TYPE_CHECK_FINDER_PF1E = 'pf2e-utils-check-finder-pf1e';
 
 export default class Pf2eUtilsPlugin extends Plugin {
-	settings!: Pf2eUtilsSettings;
+	declare settings: Pf2eUtilsSettings;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new Pf2eUtilsSettingTab(this.app, this));
 
 		this.registerMarkdownPostProcessor((el, ctx) => {
 			const codeBlocks = el.querySelectorAll('code');
@@ -97,10 +97,6 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as Pf2eUtilsSettings;
-	}
-
-	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
 	}
 
 	async activateView(viewType: string): Promise<void> {
