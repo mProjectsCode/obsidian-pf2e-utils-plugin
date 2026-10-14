@@ -1,14 +1,15 @@
 <script lang="ts" generics="System extends GameSystem">
-	import { Notice, TFile, type EventRef } from 'obsidian';
+	import type { EventRef } from 'obsidian';
+	import { Notice, TFile } from 'obsidian';
 	import CheckHighlight from './CheckHighlight.svelte';
 	import { CheckFinderView } from './CheckFinderView';
-	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
 	import { FilePrompt } from '../modals/FilePrompt';
 	import { openLevelUpdateModal } from '../modals/LevelUpdateModal';
 	import Button from '../common/Button.svelte';
 	import { ButtonStyleType } from '../../utils/misc';
 	import SettingComponent from '../common/SettingComponent.svelte';
 	import { onDestroy, untrack } from 'svelte';
+	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
 	import { GameSystem } from '../../rolls/Pf2eCheck';
 
 	const {

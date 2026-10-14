@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { INLINE_CHECK_PARSER, type Pf2eCheck, stringifyPf2eCheck, GameSystem, formatPf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
+import type { Pf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
+import { INLINE_CHECK_PARSER, stringifyPf2eCheck, GameSystem, formatPf2eCheck } from '../packages/obsidian/src/rolls/Pf2eCheck';
 import { Pf1eMiscSkills, Pf1eSkills, Pf2eMiscSkills, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
 
 interface CheckStringifyCase {

@@ -71,15 +71,21 @@ const PF1E_TO_PF2E_DC_TABLE: Record<number, DCTableEntry> = {
 
 export function pf2eLevelBasedDC(level: number): number {
 	const entry = PF1E_TO_PF2E_DC_TABLE[level];
-	if (!entry) throw new Error(`Invalid level ${level}`);
+	if (!entry) {
+		throw new Error(`Invalid level ${level}`);
+	}
 	return entry.pf2eOffset + 10;
 }
 
 export function convertPf1eToPf2eDC(level: number, pf1eDC: number): number | undefined {
 	const entry = PF1E_TO_PF2E_DC_TABLE[level];
-	if (!entry) return undefined;
+	if (!entry) {
+		return undefined;
+	}
 	const index = pf1eDC - entry.pf1eOffset;
-	if (index < 0 || index >= PF2E_DC_CURVE.length) return undefined;
+	if (index < 0 || index >= PF2E_DC_CURVE.length) {
+		return undefined;
+	}
 	return PF2E_DC_CURVE[index] + entry.pf2eOffset;
 }
 
@@ -92,10 +98,18 @@ export enum Pf2eProficiency {
 }
 
 export function pf2eCheckRequiredProficiency(pf2eDC: number): Pf2eProficiency {
-	if (pf2eDC < 15) return Pf2eProficiency.UNTRAINED;
-	if (pf2eDC < 20) return Pf2eProficiency.TRAINED;
-	if (pf2eDC < 30) return Pf2eProficiency.EXPERT;
-	if (pf2eDC < 40) return Pf2eProficiency.MASTER;
+	if (pf2eDC < 15) {
+		return Pf2eProficiency.UNTRAINED;
+	}
+	if (pf2eDC < 20) {
+		return Pf2eProficiency.TRAINED;
+	}
+	if (pf2eDC < 30) {
+		return Pf2eProficiency.EXPERT;
+	}
+	if (pf2eDC < 40) {
+		return Pf2eProficiency.MASTER;
+	}
 	return Pf2eProficiency.LEGENDARY;
 }
 
@@ -127,12 +141,24 @@ export enum Pf2eCheckDifficulty {
 export function pf2eCheckDifficulty(level: number, pf2eDC: number): Pf2eCheckDifficulty {
 	const levelBasedDC = pf2eLevelBasedDC(level);
 	const diff = pf2eDC - levelBasedDC;
-	if (diff <= -10) return Pf2eCheckDifficulty.INCREDIBLY_EASY;
-	if (diff <= -5) return Pf2eCheckDifficulty.VERY_EASY;
-	if (diff <= -2) return Pf2eCheckDifficulty.EASY;
-	if (diff < 2) return Pf2eCheckDifficulty.AVERAGE;
-	if (diff < 5) return Pf2eCheckDifficulty.HARD;
-	if (diff < 10) return Pf2eCheckDifficulty.VERY_HARD;
+	if (diff <= -10) {
+		return Pf2eCheckDifficulty.INCREDIBLY_EASY;
+	}
+	if (diff <= -5) {
+		return Pf2eCheckDifficulty.VERY_EASY;
+	}
+	if (diff <= -2) {
+		return Pf2eCheckDifficulty.EASY;
+	}
+	if (diff < 2) {
+		return Pf2eCheckDifficulty.AVERAGE;
+	}
+	if (diff < 5) {
+		return Pf2eCheckDifficulty.HARD;
+	}
+	if (diff < 10) {
+		return Pf2eCheckDifficulty.VERY_HARD;
+	}
 	return Pf2eCheckDifficulty.INCREDIBLY_HARD;
 }
 

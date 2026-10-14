@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { formatPf2eCheck, stringifyPf2eCheck, type Pf2eCheck } from '../rolls/Pf2eCheck';
+	import { formatPf2eCheck, stringifyPf2eCheck } from '../rolls/Pf2eCheck';
 	import { getPf2eCheckClassification, pf2eLevelBasedDC } from '../rolls/CheckConversion';
 	import { ALL_PF2E_SKILLS, Pf2eMiscSkills, Pf2eSkills } from '../rolls/NaturalLanguageCheck';
+	import type { Pf2eCheck } from '../rolls/Pf2eCheck';
 	import { ButtonStyleType } from '../utils/misc';
 	import Button from './common/Button.svelte';
 	import FlexRow from './common/FlexRow.svelte';

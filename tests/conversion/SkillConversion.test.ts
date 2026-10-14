@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { convertPf1eSkillToPf2eSkill, convertPf1eCheckToPf2eCheck } from 'packages/obsidian/src/rolls/CheckConversion';
-import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
 import { Pf1eMiscSkills, Pf1eSkills, Pf2eMiscSkills, Pf2eSkills } from 'packages/obsidian/src/rolls/NaturalLanguageCheck';
+import type { Pf1eCheck } from 'packages/obsidian/src/rolls/Pf1eCheck';
 
 describe('PF1E to PF2E skill conversion', () => {
 	test('converts mapped PF1e skill to PF2e skills', () => {
