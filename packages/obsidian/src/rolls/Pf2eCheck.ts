@@ -63,7 +63,7 @@ const ADJUSTMENT_PARSER: Parser<Pick<Pf2eCheck, 'adjustment'>> = P.sequenceMap(
 );
 
 const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
-	(type, rest) => {
+	(type, rest): Pf2eCheck => {
 		const res = { type, other: [] as string[] } satisfies Partial<Pf2eCheck>;
 		for (const part of rest) {
 			if (typeof part === 'string') {
@@ -72,7 +72,7 @@ const INLINE_CHECK_INNER_PARSER = P.sequenceMap(
 				Object.assign(res, part);
 			}
 		}
-		return res as Pf2eCheck;
+		return res;
 	},
 	TYPE_PARSER.trim(P_UTILS.optionalWhitespace()),
 	P.sequenceMap(

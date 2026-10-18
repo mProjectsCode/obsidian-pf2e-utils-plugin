@@ -3,7 +3,7 @@ import type { CheckScanResult, SystemToCheckMap } from 'packages/obsidian/src/ro
 import type { GameSystem } from 'packages/obsidian/src/rolls/Pf2eCheck';
 
 export interface ICheckFinder<System extends GameSystem> {
-	findChecks(content: string): Promise<CheckScanResult<GameSystem>[]>;
+	findChecks(content: string): Promise<CheckScanResult<System>[]>;
 	convertCheck(check: CheckScanResult<System>, file: TFile, level: number): Promise<boolean>;
 	formatCheck(check: SystemToCheckMap[System]): string;
 }

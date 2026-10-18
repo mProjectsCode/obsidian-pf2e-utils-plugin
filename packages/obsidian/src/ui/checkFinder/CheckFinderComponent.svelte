@@ -1,8 +1,8 @@
 <script lang="ts" generics="System extends GameSystem">
-	import type { EventRef } from 'obsidian';
-	import { Notice, TFile } from 'obsidian';
+	import type { EventRef, TFile } from 'obsidian';
+	import { Notice } from 'obsidian';
 	import CheckHighlight from './CheckHighlight.svelte';
-	import { CheckFinderView } from './CheckFinderView';
+	import './CheckFinderView';
 	import { FilePrompt } from '../modals/FilePrompt';
 	import { openLevelUpdateModal } from '../modals/LevelUpdateModal';
 	import Button from '../common/Button.svelte';
@@ -10,7 +10,9 @@
 	import SettingComponent from '../common/SettingComponent.svelte';
 	import { onDestroy, untrack } from 'svelte';
 	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
-	import { GameSystem } from '../../rolls/Pf2eCheck';
+	import type { GameSystem } from '../../rolls/Pf2eCheck';
+	import '../../rolls/Pf2eCheck';
+	import type { CheckFinderView } from './CheckFinderView';
 
 	const {
 		view,
@@ -70,12 +72,12 @@
 			return;
 		}
 		const content = await view.plugin.app.vault.cachedRead(file);
-		checks = (await view.checkFinder.findChecks(content)) as CheckScanResult<System>[];
+		checks = await view.checkFinder.findChecks(content);
 	}
 
 	function selectFile() {
-		new FilePrompt(view.plugin.app, async f => {
-			await withLocked(async () => {
+		new FilePrompt(view.plugin.app, f => {
+			void withLocked(async () => {
 				file = f;
 				level = view.plugin.getLevelFromFrontmatter(f);
 				checks = [];
@@ -83,7 +85,7 @@
 				if (level !== undefined) {
 					await findChecks();
 				}
-			});
+			}).catch(console.error);
 		}).open();
 	}
 
@@ -162,7 +164,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each checks.slice(0, 100) as result, i}
+			{#each checks.slice(0, 100) as result, i (result)}
 				<tr>
 					<td><CheckHighlight bind:check={checks[i]}></CheckHighlight></td>
 					<td>

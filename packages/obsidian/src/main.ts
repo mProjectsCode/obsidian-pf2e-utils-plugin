@@ -157,7 +157,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 	}
 
 	getLevelFromFrontmatter(file: TFile): number | undefined {
-		const levelProp = (this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined)?.level;
+		const levelProp: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.level;
 		return this.parseLevel(levelProp);
 	}
 

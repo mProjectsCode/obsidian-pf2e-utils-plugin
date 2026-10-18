@@ -29,7 +29,6 @@ export class Pf2eCheckMDRC extends MarkdownRenderChild {
 			});
 			span.setAttribute('aria-label', this.getTooltip());
 			span.setAttribute('data-tooltip-delay', '100');
-			console.log(this);
 		} else {
 			this.containerEl.createEl('span', { text: 'Invalid Inline Check', cls: 'error' });
 		}

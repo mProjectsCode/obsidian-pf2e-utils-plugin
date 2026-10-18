@@ -1,6 +1,7 @@
 <script lang="ts" generics="System extends GameSystem">
 	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
-	import { GameSystem } from '../../rolls/Pf2eCheck';
+	import type { GameSystem } from '../../rolls/Pf2eCheck';
+	import '../../rolls/Pf2eCheck';
 
 	let { check = $bindable() }: { check: CheckScanResult<System> } = $props();
 

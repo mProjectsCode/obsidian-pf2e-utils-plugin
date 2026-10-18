@@ -59,8 +59,7 @@ export class LevelUpdateModal extends Modal {
 		const submitButton = buttonContainer.createEl('button', { text: 'Save', cls: 'mod-cta' });
 		const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
 
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		submitButton.addEventListener('click', async () => {
+		const submit = async (): Promise<void> => {
 			const value = parseInt(inputEl.value, 10);
 			if (!isNaN(value) && value >= 1 && value <= 20) {
 				await this.plugin.app.fileManager.processFrontMatter(this.file, frontmatter => {
@@ -73,6 +72,9 @@ export class LevelUpdateModal extends Modal {
 			} else {
 				new Notice('Please enter a valid level between 1 and 20.');
 			}
+		};
+		submitButton.addEventListener('click', () => {
+			void submit().catch(console.error);
 		});
 
 		cancelButton.addEventListener('click', () => {

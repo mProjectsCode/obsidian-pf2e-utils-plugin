@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { formatPf2eCheck, stringifyPf2eCheck } from '../rolls/Pf2eCheck';
 	import { getPf2eCheckClassification, pf2eLevelBasedDC } from '../rolls/CheckConversion';
-	import { ALL_PF2E_SKILLS, Pf2eMiscSkills, Pf2eSkills } from '../rolls/NaturalLanguageCheck';
+	import type { Pf2eSkills } from '../rolls/NaturalLanguageCheck';
+	import { ALL_PF2E_SKILLS, Pf2eMiscSkills } from '../rolls/NaturalLanguageCheck';
 	import type { Pf2eCheck } from '../rolls/Pf2eCheck';
 	import { ButtonStyleType } from '../utils/misc';
 	import Button from './common/Button.svelte';
@@ -111,10 +112,10 @@
 	<SettingComponent heading={true} name="Check Types"></SettingComponent>
 
 	<div class="pf2e-settings-stack">
-		{#each types as type, i}
+		{#each types as type, i (type)}
 			<FlexRow stretchChildren={true}>
 				<select class="dropdown" bind:value={type.type}>
-					{#each ALL_PF2E_SKILLS as skill}
+					{#each ALL_PF2E_SKILLS as skill (skill)}
 						<option value={skill}>{skill}</option>
 					{/each}
 					<option value={undefined}>None</option>
