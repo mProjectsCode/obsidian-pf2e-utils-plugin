@@ -1,18 +1,18 @@
 <script lang="ts" generics="System extends GameSystem">
 	import type { EventRef, TFile } from 'obsidian';
 	import { Notice } from 'obsidian';
-	import CheckHighlight from './CheckHighlight.svelte';
 	import './CheckFinderView';
-	import { FilePrompt } from '../modals/FilePrompt';
-	import { openLevelUpdateModal } from '../modals/LevelUpdateModal';
-	import Button from '../common/Button.svelte';
-	import { ButtonStyleType } from '../../utils/misc';
-	import SettingComponent from '../common/SettingComponent.svelte';
 	import { onDestroy, untrack } from 'svelte';
 	import type { CheckScanResult } from '../../rolls/NaturalLanguageCheckScanner';
 	import type { GameSystem } from '../../rolls/Pf2eCheck';
+	import { ButtonStyleType } from '../../utils/misc';
+	import Button from '../common/Button.svelte';
+	import SettingComponent from '../common/SettingComponent.svelte';
+	import { FilePrompt } from '../modals/FilePrompt';
+	import { openLevelUpdateModal } from '../modals/LevelUpdateModal';
 	import '../../rolls/Pf2eCheck';
 	import type { CheckFinderView } from './CheckFinderView';
+	import CheckHighlight from './CheckHighlight.svelte';
 
 	const {
 		view,

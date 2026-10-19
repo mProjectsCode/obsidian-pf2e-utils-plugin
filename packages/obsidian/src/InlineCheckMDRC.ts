@@ -22,7 +22,7 @@ export class Pf2eCheckMDRC extends MarkdownRenderChild {
 		this.containerEl.empty();
 		if (this.check) {
 			const formatted = formatPf2eCheck(this.check);
-			const span = this.containerEl.createEl('span', { text: formatted });
+			const span = this.containerEl.createSpan({ text: formatted });
 			span.addEventListener('click', () => {
 				void navigator.clipboard.writeText(this.cleanedContent);
 				new Notice('Copied raw inline check to clipboard');
@@ -30,7 +30,7 @@ export class Pf2eCheckMDRC extends MarkdownRenderChild {
 			span.setAttribute('aria-label', this.getTooltip());
 			span.setAttribute('data-tooltip-delay', '100');
 		} else {
-			this.containerEl.createEl('span', { text: 'Invalid Inline Check', cls: 'error' });
+			this.containerEl.createSpan({ text: 'Invalid Inline Check', cls: 'error' });
 		}
 	}
 
