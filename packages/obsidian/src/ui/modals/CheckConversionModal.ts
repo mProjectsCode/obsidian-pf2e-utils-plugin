@@ -43,7 +43,7 @@ export class CheckConversionModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle('Convert Check');
+		this.setTitle('Convert check');
 		this.contentEl.empty();
 
 		this.contentEl.createEl('p', { text: `Pf1e check: ${formatPf1eCheck(this.check)}` });

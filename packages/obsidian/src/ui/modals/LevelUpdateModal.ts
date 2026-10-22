@@ -34,7 +34,7 @@ export class LevelUpdateModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle('Update Level');
+		this.setTitle('Update level');
 
 		this.contentEl.empty();
 

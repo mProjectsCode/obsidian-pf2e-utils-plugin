@@ -36,7 +36,7 @@ export class Pf2eCheckMDRC extends MarkdownRenderChild {
 
 	onunload(): void {
 		this.containerEl.empty();
-		this.containerEl.innerText = 'unloaded inline check';
+		this.containerEl.innerText = 'Unloaded inline check';
 	}
 
 	getTooltip(): string {

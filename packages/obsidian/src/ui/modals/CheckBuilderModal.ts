@@ -40,7 +40,7 @@ export class CheckBuilderModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle('Convert Check');
+		this.setTitle('Convert check');
 		this.contentEl.empty();
 
 		this.svelteComponent = mount(Pf2eInlineCheckBuilder, {

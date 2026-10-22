@@ -62,7 +62,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-pf1e-check-finder',
-			name: 'Open PF1E Check Finder',
+			name: 'Open PF1E check finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF1E);
 			},
@@ -70,7 +70,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-pf2e-check-finder',
-			name: 'Open PF2E Check Finder',
+			name: 'Open PF2E check finder',
 			callback: async () => {
 				await this.activateView(VIEW_TYPE_CHECK_FINDER_PF2E);
 			},
@@ -78,7 +78,7 @@ export default class Pf2eUtilsPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-pf2e-check-builder',
-			name: 'Open PF2E Check Builder',
+			name: 'Open PF2E check builder',
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				const level = activeFile ? this.getLevelFromFrontmatter(activeFile) : undefined;
