@@ -1,7 +1,7 @@
 {
 	"id": "pf2e-utils",
 	"name": "PF2E Utils",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"minAppVersion": "1.13.0",
 	"description": "Create inline checks and convert Pathfinder First Edition checks to Pathfinder Second Edition.",
 	"author": "Moritz Jung",
